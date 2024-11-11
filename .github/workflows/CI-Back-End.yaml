@@ -24,6 +24,6 @@ jobs:
           NEXUS_REPO_PASSWORD: ${{ secrets.NEXUS_REPO_PASSWORD }}
           NEXUS_REPO_USER_NAME: ${{ secrets.NEXUS_REPO_USER_NAME }}
         run: |
-          cd form-manager-api/src/Effi.FormManager.API/
+          cd apps/OpenSignServer
           dotnet nuget add source $NEXUS_NUGET_REPO_URL --name $NEXUS_NUGET_REPO_NAME -u $NEXUS_REPO_USER_NAME -p $NEXUS_REPO_PASSWORD --store-password-in-clear-text
           dotnet build "Effi.OpenSign.API.csproj" -c Release
