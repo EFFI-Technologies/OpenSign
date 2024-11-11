@@ -40,17 +40,14 @@ jobs:
       - name: Install Dependencies      
         run: npm i 
 
-      - name: Build build:builder   
-        run: npm run build:builder
-
       - name: Publish artifacts builder
-        run: aws s3 cp ./dist/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
       - name: Build build:viewer   
         run: npm run build:viewer
 
       - name: Publish artifacts viewer
-        run: aws s3 cp ./dist/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
