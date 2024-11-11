@@ -1,7 +1,7 @@
 name: Production-FrontEnd-Deploy
 
 on:
-  workflow_dispatch:   # Allows manual triggers
+  workflow_dispatch:   # This allows manual triggers
   # Uncomment below to trigger on push to tags or main branch
   # push:
   #   tags:
@@ -10,24 +10,24 @@ on:
   #     - 'main'
 
 jobs:
-  OpenSign-FE-Deploy:
-    if: ${{ !failure() && !cancelled() }}
-    name: Build and Deploy OPENSIGN Frontend
+  MFE-Deploy:
+    if: ${{ ! failure() && ! cancelled() }}
+    name: Build and Copy OPENSIGN
     runs-on: ubuntu-latest
-    environment:
+    environment: 
       name: Production
       url: https://esign.effi.com.au/
     permissions:
       id-token: write
       contents: read
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '20.12.2'  # Latest LTS version
+          node-version: '20.12.2' # Latest LTS
 
       - name: Configure AWS credentials from OIDC Provider
         uses: aws-actions/configure-aws-credentials@v4
@@ -35,31 +35,23 @@ jobs:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
-          role-duration-seconds: 900
+          role-duration-seconds: 900 
 
-      - name: Install Dependencies
-        run: |
-          cd apps/OpenSign  # Change directory to your frontend app folder
-          npm install
+      - name: Install Dependencies      
+        run: npm i 
 
-      - name: Build the frontend
-        run: |
-          cd apps/OpenSign  # Change directory to your frontend app folder
-          npm run build  # This will build the frontend
+      - name: Publish artifacts builder
+        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
-      - name: Upload built artifacts to S3
-        run: |
-          cd apps/OpenSign  # Change directory to your frontend app folder
-          aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive  # Make sure the build output is in the correct path
+      - name: Build build:viewer   
+        run: npm run build:viewer
 
-      - name: Publish artifacts viewer (optional, if separate from the main build)
-        run: |
-          cd apps/OpenSign  # Change directory to your frontend app folder
-          aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+      - name: Publish artifacts viewer
+        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
-    name: CloudFront cache invalidation
+    name: CloudFront invalidation
     runs-on: ubuntu-latest
     needs: [MFE-Deploy]
     permissions:
