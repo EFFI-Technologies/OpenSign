@@ -10,7 +10,7 @@ on:
   #     - 'main'
 
 jobs:
-  MFE-Deploy:
+  OpenSign-FE-Deploy:
     if: ${{ !failure() && !cancelled() }}
     name: Build and Deploy OPENSIGN Frontend
     runs-on: ubuntu-latest
@@ -38,16 +38,24 @@ jobs:
           role-duration-seconds: 900
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm install
 
       - name: Build the frontend
-        run: npm run build  # This is where the frontend is built (e.g., React, Vue, Angular, etc.)
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm run build  # This will build the frontend
 
       - name: Upload built artifacts to S3
-        run: aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive  # Make sure the path is the build output directory
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive  # Make sure the build output is in the correct path
 
       - name: Publish artifacts viewer (optional, if separate from the main build)
-        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
