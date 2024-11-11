@@ -1,52 +1,29 @@
-name: SonarQube Scan
+name: Test and Compile
 
 on:
   push:
     branches:
-      - main  # Trigger the workflow only on the `main` branch
-  pull_request:
-    branches:
-      - main  # Optionally, trigger the workflow on pull requests to `main`
+      - '*'
+      - '!main'
+
 
 jobs:
-  sonarQubeScan:
-    runs-on: ubuntu-latest  # Use Ubuntu for the job's runner
-
+  Compile:
+    if: github.event_name == 'push'
+    #needs: [Test]
+    runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Docker to run the SonarQube scanner
-      - name: Set up Docker for SonarQube scanner
-        run: |
-          docker pull sonarsource/sonar-scanner-cli:latest
-
-      # Step 3: Set environment variables for SonarQube
-      - name: Set environment variables
-        run: |
-          echo "SONAR_USER_HOME=${{ github.workspace }}/.sonar" >> $GITHUB_ENV
-          echo "GIT_DEPTH=0" >> $GITHUB_ENV
-
-      # Step 4: Cache SonarQube data to speed up subsequent runs
-      - name: Cache SonarQube scanner data
-        uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          path: ${{ github.workspace }}/.sonar/cache
-          key: sonar-cache-${{ runner.os }}-${{ hashFiles('**/*.js') }}  # Adjust the file pattern as per your project
-          restore-keys: |
-            sonar-cache-${{ runner.os }}-
-
-      # Step 5: Run the SonarQube scanner
-      - name: Run SonarQube scanner
+          dotnet-version: '8.0'
+      - name: Dotnet Build
+        env:
+          NEXUS_NUGET_REPO_NAME: ${{ secrets.NEXUS_NUGET_REPO_NAME }}
+          NEXUS_NUGET_REPO_URL: ${{ secrets.NEXUS_NUGET_REPO_URL }}
+          NEXUS_REPO_PASSWORD: ${{ secrets.NEXUS_REPO_PASSWORD }}
+          NEXUS_REPO_USER_NAME: ${{ secrets.NEXUS_REPO_USER_NAME }}
         run: |
-          docker run --rm -e SONAR_USER_HOME=${{ github.workspace }}/.sonar \
-            -v ${{ github.workspace }}:/usr/src -w /usr/src sonarsource/sonar-scanner-cli:latest \
-            sonar-scanner -Dsonar.qualitygate.wait=true
-
-      # Step 6: After script - Output message
-      - name: After script - SonarQube Check Completed
-        run: echo "SonarQube Check Completed!"
-
-    # Allow failure, so the job doesn’t block other steps in the workflow
-    continue-on-error: true
+          cd form-manager-api/src/Effi.FormManager.API/
+          dotnet nuget add source $NEXUS_NUGET_REPO_URL --name $NEXUS_NUGET_REPO_NAME -u $NEXUS_REPO_USER_NAME -p $NEXUS_REPO_PASSWORD --store-password-in-clear-text
+          dotnet build "Effi.FormManager.API.csproj" -c Release
