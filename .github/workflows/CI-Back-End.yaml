@@ -1,0 +1,29 @@
+name: Test and Compile
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!main'
+
+
+jobs:
+  Compile:
+    if: github.event_name == 'push'
+    #needs: [Test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+      - name: Dotnet Build
+        env:
+          NEXUS_NUGET_REPO_NAME: ${{ secrets.NEXUS_NUGET_REPO_NAME }}
+          NEXUS_NUGET_REPO_URL: ${{ secrets.NEXUS_NUGET_REPO_URL }}
+          NEXUS_REPO_PASSWORD: ${{ secrets.NEXUS_REPO_PASSWORD }}
+          NEXUS_REPO_USER_NAME: ${{ secrets.NEXUS_REPO_USER_NAME }}
+        run: |
+          cd form-manager-api/src/Effi.FormManager.API/
+          dotnet nuget add source $NEXUS_NUGET_REPO_URL --name $NEXUS_NUGET_REPO_NAME -u $NEXUS_REPO_USER_NAME -p $NEXUS_REPO_PASSWORD --store-password-in-clear-text
+          dotnet build "Effi.OpenSign.API.csproj" -c Release
