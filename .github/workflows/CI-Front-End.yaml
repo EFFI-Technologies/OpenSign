@@ -48,7 +48,7 @@ jobs:
           npm run build  # This will build the frontend
 
       - name: Publish artifacts builder
-        run: aws s3 cp ./dist/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+        run: aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
 
   Invalidate:
