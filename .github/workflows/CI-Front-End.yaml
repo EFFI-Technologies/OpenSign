@@ -47,8 +47,17 @@ jobs:
           cd apps/OpenSign  # Change directory to your frontend app folder
           npm run build  # This will build the frontend
 
-      - name: Publish artifacts builder
-        run: aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive
+      - name: Check build directory exists
+        run: ls -alh ./build  # List the contents of the build folder to check if it exists
+
+      - name: Upload built artifacts to S3
+        run: |
+          if [ -d "./build" ]; then
+            aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive  # Use ./build/ here instead of ./dist/
+          else
+            echo "Build folder doesn't exist!" && exit 1
+        continue-on-error: false  # Make sure this step fails if the build folder doesn't exist
+
 
 
   Invalidate:
