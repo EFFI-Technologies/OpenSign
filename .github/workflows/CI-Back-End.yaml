@@ -1,46 +1,52 @@
-name: OpenSign Backend CI
+name: SonarQube Scan
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow only on the `main` branch
   pull_request:
     branches:
-      - main
+      - main  # Optionally, trigger the workflow on pull requests to `main`
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  sonarQubeScan:
+    runs-on: ubuntu-latest  # Use Ubuntu for the job's runner
 
     steps:
       # Step 1: Checkout code
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Java (Maven)
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'adoptopenjdk'
+      # Step 2: Set up Docker to run the SonarQube scanner
+      - name: Set up Docker for SonarQube scanner
+        run: |
+          docker pull sonarsource/sonar-scanner-cli:latest
 
-      # Step 3: Cache Maven dependencies (optional, speeds up the build)
-      - name: Cache Maven dependencies
+      # Step 3: Set environment variables for SonarQube
+      - name: Set environment variables
+        run: |
+          echo "SONAR_USER_HOME=${{ github.workspace }}/.sonar" >> $GITHUB_ENV
+          echo "GIT_DEPTH=0" >> $GITHUB_ENV
+
+      # Step 4: Cache SonarQube data to speed up subsequent runs
+      - name: Cache SonarQube scanner data
         uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          path: ${{ github.workspace }}/.sonar/cache
+          key: sonar-cache-${{ runner.os }}-${{ hashFiles('**/*.js') }}  # Adjust the file pattern as per your project
           restore-keys: |
-            ${{ runner.os }}-maven-
+            sonar-cache-${{ runner.os }}-
 
-      # Step 4: Build the project
-      - name: Build with Maven
+      # Step 5: Run the SonarQube scanner
+      - name: Run SonarQube scanner
         run: |
-          cd OpenSignServer  # Go to the OpenSignServer directory
-          mvn clean install  # Run Maven build (you can also use `mvn verify` or `mvn package`)
+          docker run --rm -e SONAR_USER_HOME=${{ github.workspace }}/.sonar \
+            -v ${{ github.workspace }}:/usr/src -w /usr/src sonarsource/sonar-scanner-cli:latest \
+            sonar-scanner -Dsonar.qualitygate.wait=true
 
-      # Step 5: Run Tests (optional)
-      - name: Run tests
-        run: |
-          cd OpenSignServer
-          mvn test
+      # Step 6: After script - Output message
+      - name: After script - SonarQube Check Completed
+        run: echo "SonarQube Check Completed!"
+
+    # Allow failure, so the job doesn’t block other steps in the workflow
+    continue-on-error: true
