@@ -37,17 +37,19 @@ jobs:
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
           role-duration-seconds: 900 
 
-      - name: Install Dependencies      
-        run: npm i 
+      - name: Install Dependencies
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm install
+
+      - name: Build the frontend
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm run build  # This will build the frontend
 
       - name: Publish artifacts builder
         run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
-      - name: Build build:viewer   
-        run: npm run build:viewer
-
-      - name: Publish artifacts viewer
-        run: aws s3 cp ./apps/OpenSign/ s3://${{ secrets.BUCKET }}/esign/ --recursive
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
