@@ -47,10 +47,10 @@ jobs:
           cd apps/OpenSign  # Change directory to your frontend app folder
           npm run build  # This will build the frontend
 
-      - name: List Build Directory
+      - name: List Static Directory Contents
         run: |
           cd apps/OpenSign
-          ls -al ./build    # Verify if the build output is inside the 'build' folde
+          ls -al ./static
 
       - name: Upload built artifacts to S3
         run: |
