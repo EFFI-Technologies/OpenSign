@@ -1,4 +1,4 @@
-name: Test and Compile
+name: Docker Build
 
 on:
   push:
@@ -6,24 +6,27 @@ on:
       - '*'
       - '!main'
 
-
 jobs:
-  Compile:
-    if: github.event_name == 'push'
-    #needs: [Test]
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0'
-      - name: Dotnet Build
-        env:
-          NEXUS_NUGET_REPO_NAME: ${{ secrets.NEXUS_NUGET_REPO_NAME }}
-          NEXUS_NUGET_REPO_URL: ${{ secrets.NEXUS_NUGET_REPO_URL }}
-          NEXUS_REPO_PASSWORD: ${{ secrets.NEXUS_REPO_PASSWORD }}
-          NEXUS_REPO_USER_NAME: ${{ secrets.NEXUS_REPO_USER_NAME }}
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Docker (if necessary)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 3: Build the Docker image
+      - name: Build Docker image
         run: |
-          cd form-manager-api/src/Effi.FormManager.API/
-          dotnet nuget add source $NEXUS_NUGET_REPO_URL --name $NEXUS_NUGET_REPO_NAME -u $NEXUS_REPO_USER_NAME -p $NEXUS_REPO_PASSWORD --store-password-in-clear-text
-          dotnet build "Effi.FormManager.API.csproj" -c Release
+          docker build -t open-sign-server:latest -f apps/OpenSignServer/Dockerfile .
+
+      # Optional Step: Push the Docker image to Docker Hub or ECR (if needed)
+      # Uncomment this if you want to push the built image to Docker Hub or ECR
+      # - name: Push Docker image to Docker Hub
+      #   run: |
+      #     echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      #     docker push my-docker-image:latest
