@@ -1,0 +1,41 @@
+name: Test and Lint
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!main'
+
+
+jobs:
+  Lint:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+        fail-fast: false
+        matrix:
+          node-version: [ '16', '18.20.2', '20.12.2']
+    name: Node ${{ matrix.node-version }} Lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+            node-version: ${{ matrix.node-version }}
+      - run: npm i && npm run lint 
+
+  Test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+        fail-fast: false
+        matrix:
+            node-version: [ '16', '18.20.2', '20.12.2']
+    name: Node ${{ matrix.node-version }} Test
+    steps:
+       - uses: actions/checkout@v4
+       - name: Set up Node.js
+         uses: actions/setup-node@v2
+         with:
+            node-version: ${{ matrix.node-version }}
+       - run: npm i && npm run test:ci
