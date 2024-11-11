@@ -50,7 +50,7 @@ jobs:
       - name: List Static Directory Contents
         run: |
           cd apps/OpenSign
-          ls -al ./static
+          ls -al ./build
 
       - name: Upload built artifacts to S3
         run: |
