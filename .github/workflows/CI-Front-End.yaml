@@ -14,14 +14,14 @@ jobs:
     if: ${{ ! failure() && ! cancelled() }}
     name: Build and Copy OPENSIGN
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: Production
       url: https://esign.effi.com.au/
     permissions:
       id-token: write
       contents: read
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -35,7 +35,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
-          role-duration-seconds: 900 
+          role-duration-seconds: 900
 
       - name: Install Dependencies
         run: |
@@ -47,31 +47,26 @@ jobs:
           cd apps/OpenSign  # Change directory to your frontend app folder
           npm run build  # This will build the frontend
 
-      - name: List Static Directory Contents
+      - name: List Directory Contents
         run: |
           cd apps/OpenSign
-          ls -al ./build
+          ls -al
 
-      - name: Upload built artifacts to S3
+      - name: Upload all files from OpenSign to S3
         run: |
-          if [ -d "./build" ]; then
-            aws s3 cp ./build/ s3://${{ secrets.BUCKET }}/esign/ --recursive  # Use ./build/ here instead of ./dist/
-          else
-            echo "Build folder doesn't exist!" && exit 1
-        continue-on-error: false  # Make sure this step fails if the build folder doesn't exist
-
-
+          cd apps/OpenSign
+          aws s3 cp . s3://${{ secrets.BUCKET }}/esign/ --recursive  # Copy all files from OpenSign folder
+        continue-on-error: false  # Ensure this step fails if there's an error
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
     name: CloudFront invalidation
     runs-on: ubuntu-latest
-    needs: [MFE-Deploy]
+    needs: [MFE-Deploy]  # This step will only run after the MFE-Deploy job has finished successfully
     permissions:
       id-token: write
       contents: read
     steps:
-
       - name: Configure AWS credentials from OIDC Provider
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -79,6 +74,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
           role-duration-seconds: 900
-    
+
       - name: Invalidate CloudFront Distribution Cache
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CF_ID_PRODUCTION }} --paths "/*"
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CF_ID_PRODUCTION }} --paths "/*"
