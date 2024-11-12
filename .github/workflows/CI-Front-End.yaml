@@ -55,7 +55,7 @@ jobs:
       - name: Upload all files from OpenSign to S3
         run: |
           cd apps/OpenSign/build
-          aws s3 cp . s3://${{ secrets.BUCKET }}/esign/ --recursive  # Copy all files from OpenSign folder
+          aws s3 cp . s3://${{ secrets.BUCKET }}/ --recursive  # Copy all files from OpenSign folder
         continue-on-error: false  # Ensure this step fails if there's an error
 
   Invalidate:
