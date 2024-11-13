@@ -1,1 +1,23 @@
+name: Production-Backend-Build
+
+on:
+  workflow_dispatch:  # Allows manual trigger of the workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Docker (if necessary)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 3: Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t open-sign-server:latest -f apps/OpenSignServer/Dockerfile .
 
