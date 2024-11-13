@@ -3,6 +3,9 @@ name: Production-Backend-Deploy
 on:
   workflow_dispatch:  # Allows manual trigger of the workflow
 
+permissions:
+  id-token: write  # Allow GitHub to issue an OIDC token for authentication
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,19 +28,19 @@ jobs:
       - name: Configure AWS credentials from OIDC Provider
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}  # The ARN of the role to assume
-          aws-region: ${{ secrets.AWS_REGION }}  # AWS Region (ensure this is set as a secret)
-          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner  # Custom session name
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}  # IAM Role ARN to assume
+          aws-region: ${{ secrets.AWS_REGION }}  # AWS region (make sure this is set as a secret)
+          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
           role-duration-seconds: 900  # Duration of the session (15 minutes)
 
-      # Step 5: Log in to Amazon ECR (now AWS credentials are configured)
+      # Step 5: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
           skip-logout: false  # Ensures that login occurs correctly
 
-      # Step 6: Tag the Docker image with the ECR repository URI
+      # Step 6: Tag Docker image for ECR
       - name: Tag Docker image
         run: |
           IMAGE_TAG=latest
@@ -51,7 +54,7 @@ jobs:
           REPOSITORY_URI=020859241731.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
           docker push $REPOSITORY_URI:$IMAGE_TAG
 
-      # Step 8: Retrieve latest ECS task definition and update with the new image
+      # Step 8: Retrieve and update ECS task definition
       - name: Retrieve latest ECS task definition
         run: |
           TASK_DEFINITION_FAMILY="opensign-service-api-saas-production"
@@ -65,22 +68,4 @@ jobs:
           # Register a new revision of the task definition with the updated image
           NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
             --family $TASK_DEFINITION_FAMILY \
-            --container-definitions "[{\"name\":\"$SERVICE_NAME\",\"image\":\"$IMAGE_URI\",\"essential\":true}]" \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          echo "New Task Definition ARN: $NEW_TASK_DEFINITION"
-
-      # Step 9: Update ECS service with the new task definition
-      - name: Update ECS service with new task definition
-        run: |
-          CLUSTER_NAME="ECS-Cluster-SAAS-Production"
-          SERVICE_NAME="opensign-service-api-saas-production"
-          
-          # Perform the ECS service update with the new task definition
-          aws ecs update-service \
-            --cluster $CLUSTER_NAME \
-            --service $SERVICE_NAME \
-            --task-definition $NEW_TASK_DEFINITION \
-            --force-new-deployment \
-            --desired-count 1
+            --container-definitions "[{\"name\":\"$SERVICE_NAME\",\"image\":\"$IMAGE_URI\",\"essential\":true}]"
