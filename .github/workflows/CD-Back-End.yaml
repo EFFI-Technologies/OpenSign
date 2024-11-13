@@ -54,4 +54,24 @@ jobs:
           LATEST_TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION_FAMILY --query "taskDefinition.revision" --output text)
 
           # Register a new revision of the task definition with the updated image
-     
+          NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
+            --family $TASK_DEFINITION_FAMILY \
+            --container-definitions "[{\"name\":\"$SERVICE_NAME\",\"image\":\"$IMAGE_URI\",\"essential\":true}]" \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "New Task Definition ARN: $NEW_TASK_DEFINITION"
+
+      # Step 8: Update ECS service with the new task definition
+      - name: Update ECS service with new task definition
+        run: |
+          CLUSTER_NAME="ECS-Cluster-SAAS-Production"
+          SERVICE_NAME="opensign-service-api-saas-production"
+          
+          # Perform the ECS service update with the new task definition
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --task-definition $NEW_TASK_DEFINITION \
+            --force-new-deployment \
+            --desired-count 1
