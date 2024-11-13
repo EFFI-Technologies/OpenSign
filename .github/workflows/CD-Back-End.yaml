@@ -21,28 +21,37 @@ jobs:
         run: |
           docker build -t open-sign-server:latest -f apps/OpenSignServer/Dockerfile .
 
-      # Step 4: Log in to Amazon ECR (using AWS CLI credentials with AWS_REGION)
+      # Step 4: Configure AWS credentials from OIDC Provider
+      - name: Configure AWS credentials from OIDC Provider
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}  # The ARN of the role to assume
+          aws-region: ${{ secrets.AWS_REGION }}  # AWS Region (ensure this is set as a secret)
+          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner  # Custom session name
+          role-duration-seconds: 900  # Duration of the session (15 minutes)
+
+      # Step 5: Log in to Amazon ECR (now AWS credentials are configured)
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
           skip-logout: false  # Ensures that login occurs correctly
 
-      # Step 5: Tag the Docker image with the ECR repository URI
+      # Step 6: Tag the Docker image with the ECR repository URI
       - name: Tag Docker image
         run: |
           IMAGE_TAG=latest
           REPOSITORY_URI=020859241731.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
           docker tag open-sign-server:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
 
-      # Step 6: Push Docker image to Amazon ECR
+      # Step 7: Push Docker image to Amazon ECR
       - name: Push Docker image to ECR
         run: |
           IMAGE_TAG=latest
           REPOSITORY_URI=020859241731.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
           docker push $REPOSITORY_URI:$IMAGE_TAG
 
-      # Step 7: Retrieve latest ECS task definition and update with the new image
+      # Step 8: Retrieve latest ECS task definition and update with the new image
       - name: Retrieve latest ECS task definition
         run: |
           TASK_DEFINITION_FAMILY="opensign-service-api-saas-production"
@@ -62,7 +71,7 @@ jobs:
 
           echo "New Task Definition ARN: $NEW_TASK_DEFINITION"
 
-      # Step 8: Update ECS service with the new task definition
+      # Step 9: Update ECS service with the new task definition
       - name: Update ECS service with new task definition
         run: |
           CLUSTER_NAME="ECS-Cluster-SAAS-Production"
