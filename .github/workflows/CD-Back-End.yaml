@@ -21,12 +21,12 @@ jobs:
         run: |
           docker build -t open-sign-server:latest -f apps/OpenSignServer/Dockerfile .
 
-      # Step 4: Log in to Amazon ECR (with region specified)
+      # Step 4: Log in to Amazon ECR (using AWS CLI credentials with AWS_REGION)
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
-          region: ${{ secrets.AWS_REGION }}  # Ensure region is passed here
+          skip-logout: false  # Ensures that login occurs correctly
 
       # Step 5: Tag the Docker image with the ECR repository URI
       - name: Tag Docker image
@@ -54,24 +54,4 @@ jobs:
           LATEST_TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION_FAMILY --query "taskDefinition.revision" --output text)
 
           # Register a new revision of the task definition with the updated image
-          NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
-            --family $TASK_DEFINITION_FAMILY \
-            --container-definitions "[{\"name\":\"$SERVICE_NAME\",\"image\":\"$IMAGE_URI\",\"essential\":true}]" \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          echo "New Task Definition ARN: $NEW_TASK_DEFINITION"
-
-      # Step 8: Update ECS service with the new task definition
-      - name: Update ECS service with new task definition
-        run: |
-          CLUSTER_NAME="ECS-Cluster-SAAS-Production"
-          SERVICE_NAME="opensign-service-api-saas-production"
-          
-          # Perform the ECS service update with the new task definition
-          aws ecs update-service \
-            --cluster $CLUSTER_NAME \
-            --service $SERVICE_NAME \
-            --task-definition $NEW_TASK_DEFINITION \
-            --force-new-deployment \
-            --desired-count 1
+     
