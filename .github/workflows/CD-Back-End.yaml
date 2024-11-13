@@ -21,3 +21,38 @@ jobs:
         run: |
           docker build -t open-sign-server:latest -f apps/OpenSignServer/Dockerfile .
 
+      # Step 4: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Step 5: Tag the Docker image with the ECR repository URI
+      - name: Tag Docker image
+        run: |
+          IMAGE_TAG=latest
+          REPOSITORY_URI=020859241731.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
+          docker tag open-sign-server:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+
+      # Step 6: Push Docker image to Amazon ECR
+      - name: Push Docker image to ECR
+        run: |
+          IMAGE_TAG=latest
+          REPOSITORY_URI=020859241731.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
+          docker push $REPOSITORY_URI:$IMAGE_TAG
+
+      # Step 7: Update ECS service to use the new image in the task definition
+      - name: Update ECS service with new image
+        run: |
+          CLUSTER_NAME=ECS-Cluster-SAAS-Production
+          SERVICE_NAME=opensign-service-api-saas-production
+          TASK_DEFINITION_ARN=arn:aws:ecs:ap-southeast-2:020859241731:task-definition/opensign-service-api-saas-production:1
+          IMAGE_URI=$REPOSITORY_URI:latest
+
+          # Update the task definition with the new image URI
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --task-definition $TASK_DEFINITION_ARN \
+            --force-new-deployment \
+            --desired-count 1 \
+            --overrides '{"containerOverrides":[{"name":"opensign-service-api-saas-production","image":"'$IMAGE_URI'"}]}'
+
