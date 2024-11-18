@@ -38,7 +38,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
-          registry-ids: ${{ secrets.AWS_ACCOUNT_ID }}  # AWS account ID (12-digit)
+          registry-ids: "241924812472"  # Replace with your actual 12-digit AWS account ID
 
       # Step 6: Tag Docker image for ECR
       - name: Tag Docker image
@@ -52,4 +52,4 @@ jobs:
         run: |
           IMAGE_TAG=latest
           REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
-       
+          docker push $REPOSITORY_URI:$IMAGE_TAG
