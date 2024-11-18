@@ -28,17 +28,17 @@ jobs:
       - name: Configure AWS credentials from OIDC Provider
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}  # IAM Role ARN to assume
+          role-to-assume: arn:aws:iam::241924812472:role/EFFI-GITHUB-CICD-Role  # IAM Role ARN to assume
           aws-region: ${{ secrets.AWS_REGION }}  # AWS region (make sure this is set as a secret)
-          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner
-          role-duration-seconds: 900  # Duration of the session (15 minutes)
+          role-session-name: GitHub-CI-CD-Session
+          role-duration-seconds: 900  # 15 minutes
 
       # Step 5: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
-          registry-ids: "241924812472"  # Replace with your actual 12-digit AWS account ID
+          registries: "241924812472.dkr.ecr.ap-southeast-2.amazonaws.com"  # Full ECR registry URL
 
       # Step 6: Tag Docker image for ECR
       - name: Tag Docker image
