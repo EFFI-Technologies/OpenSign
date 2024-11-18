@@ -1,3 +1,13 @@
+name: Production-Backend-Deploy
+
+on:
+  workflow_dispatch:  # Allows manual trigger of the workflow
+
+permissions:
+  id-token: write  # Allow GitHub to issue an OIDC token for authentication
+
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
