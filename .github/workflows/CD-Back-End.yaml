@@ -1,4 +1,4 @@
-name: Production-Backend-Deploy
+name: Backend-Deploy-Production-ECR
 
 on:
   workflow_dispatch:  # Allows manual trigger of the workflow
@@ -42,13 +42,13 @@ jobs:
       # Step 6: Tag Docker image for ECR
       - name: Tag Docker image
         run: |
-          IMAGE_TAG=latest
-          REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
+          IMAGE_TAG=saas-production  # Tag that matches your task definition
+          REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api  # Correct repository name
           docker tag open-sign-server:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
 
       # Step 7: Push Docker image to ECR
       - name: Push Docker image to ECR
         run: |
-          IMAGE_TAG=latest
-          REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
+          IMAGE_TAG=saas-production  # Tag that matches your task definition
+          REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api  # Correct repository name
           docker push $REPOSITORY_URI:$IMAGE_TAG
