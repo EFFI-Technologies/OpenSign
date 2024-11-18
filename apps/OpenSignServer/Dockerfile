@@ -16,6 +16,9 @@ RUN npm install
 # Copy the current directory contents into the container
 COPY ./ .
 
+# Run build command (if you have a build step)
+RUN npm run build
+
 # Make port 8080 available to the world outside this container
 EXPOSE 80
 
