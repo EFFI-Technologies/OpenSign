@@ -38,8 +38,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
-          registries: |
-            241924812472.dkr.ecr.ap-southeast-2.amazonaws.com  # Your ECR registry URI
+          registry-ids: ${{ secrets.AWS_ACCOUNT_ID }}  # AWS account ID (12-digit)
 
       # Step 6: Tag Docker image for ECR
       - name: Tag Docker image
@@ -53,26 +52,4 @@ jobs:
         run: |
           IMAGE_TAG=latest
           REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api-saas-production
-          docker push $REPOSITORY_URI:$IMAGE_TAG
-
-      # Step 8: Retrieve and update ECS task definition
-      - name: Retrieve latest ECS task definition
-        run: |
-          TASK_DEFINITION_FAMILY="opensign-service-api-saas-production"
-          CLUSTER_NAME="ECS-Cluster-SAAS-Production"
-          SERVICE_NAME="opensign-service-api-saas-production"
-          IMAGE_URI="$REPOSITORY_URI:latest"
-
-          # Fetch the latest revision of the task definition
-          LATEST_TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION_FAMILY --query "taskDefinition.revision" --output text)
-
-          # Register a new revision of the task definition with the updated image
-          NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
-            --family $TASK_DEFINITION_FAMILY \
-            --container-definitions "[{\"name\":\"$SERVICE_NAME\",\"image\":\"$IMAGE_URI\",\"essential\":true}]")
-
-          # Update ECS service with the new task definition revision
-          aws ecs update-service \
-            --cluster $CLUSTER_NAME \
-            --service $SERVICE_NAME \
-            --task-definition $NEW_TASK_DEFINITION
+       
