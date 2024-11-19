@@ -25,7 +25,7 @@ jobs:
         run: |
           IMAGE_TAG=saas-production
           CONTAINER_NAME=opensign-service-api-saas-production  # Container name as per ECS config
-          docker build -t $CONTAINER_NAME:$IMAGE_TAG -f apps/OpenSignServer/Dockerfile .
+          docker build -t $CONTAINER_NAME:$IMAGE_TAG -f /apps/OpenSignServer/Dockerfile .
           echo "Built and tagged image $CONTAINER_NAME:$IMAGE_TAG"
 
       # Step 4: Configure AWS credentials from OIDC Provider
