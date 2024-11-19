@@ -4,6 +4,14 @@ FROM node:20
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
+# Set environment variables
+ENV APPLICATION_ID=opensign
+ENV appName=open_sign_server
+ENV MASTER__KEY=""
+ENV MONGODB__URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
+ENV PARSE__MOUNT=/
+ENV SERVER__URL=https://esign.saas.effi.com.au/
+
 # Copy package.json and package-lock.json first to leverage Docker cache
 COPY apps/OpenSignServer/package*.json ./
 
@@ -16,12 +24,8 @@ RUN npm install
 # Copy the current directory contents into the container
 COPY apps/OpenSignServer/ .
 
-# Make port 8080 available to the world outside this container
+# Expose port 80
 EXPOSE 80
-
-# Define environment variables if needed
-# ENV NODE_ENV production
-# ENV DATABASE_URL mongodb://db:27017
 
 # Run the application
 CMD ["npm", "start"]
