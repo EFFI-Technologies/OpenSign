@@ -5,7 +5,7 @@ FROM node:20
 WORKDIR /usr/src/app
 
 # Set environment variables
-ENV APPLICATION_ID=opensign
+ENV APP_ID=opensign
 ENV appName=open_sign_server
 ENV MASTER__KEY=""
 ENV MONGODB__URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
