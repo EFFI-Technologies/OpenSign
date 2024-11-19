@@ -35,6 +35,7 @@ jobs:
             --build-arg SERVER_URL=$SERVER_URL \
             --build-arg MONGODB_URI=$MONGODB_URI \
             -t $CONTAINER_NAME:$IMAGE_TAG \
+            --expose 80 \
             -f apps/OpenSignServer/Dockerhubfile .
           
           echo "Built and tagged image $CONTAINER_NAME:$IMAGE_TAG"
