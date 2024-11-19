@@ -24,13 +24,13 @@ jobs:
         run: |
           IMAGE_TAG=saas-production
           CONTAINER_NAME=opensign-service-api-saas-production  # Container name as per ECS config
-          APPLICATION_ID=opensign
+          APP_ID=opensign
           MASTER_KEY=your_master_key  # Replace with actual master key or use secrets
           MONGODB_URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
           SERVER_URL=https://esign.saas.effi.com.au/
           
           docker build \
-            --build-arg APPLICATION_ID=$APP_ID \
+            --build-arg APP_ID=$APP_ID \
             --build-arg MASTER_KEY=$MASTER_KEY \
             --build-arg SERVER_URL=$SERVER_URL \
             --build-arg MONGODB_URI=$MONGODB_URI \
