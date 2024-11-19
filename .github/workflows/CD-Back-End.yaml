@@ -57,5 +57,5 @@ jobs:
           IMAGE_TAG=saas-production
           CONTAINER_NAME=opensign-service-api-saas-production  # Container name as per ECS config
           REPOSITORY_URI=241924812472.dkr.ecr.ap-southeast-2.amazonaws.com/opensign-service-api  # Correct repository name
-          docker push $REPOSITORY_URI:$IMAGE_TAG
+          docker push -f $REPOSITORY_URI:$IMAGE_TAG
           echo "Pushed image to $REPOSITORY_URI:$IMAGE_TAG"
