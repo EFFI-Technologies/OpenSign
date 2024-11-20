@@ -37,7 +37,6 @@ jobs:
             --build-arg SERVER_PORT=$SERVER_PORT \
             --build-arg APP_ID=$APP_ID \
             --build-arg APPLICATION_ID=$APPLICATION_ID \
-            --build-arg MASTER_KEY=$MASTER_KEY \
             --build-arg SERVER_URL=$SERVER_URL \
             --build-arg MONGODB_URI=$MONGODB_URI \
             -t $CONTAINER_NAME:$IMAGE_TAG \
