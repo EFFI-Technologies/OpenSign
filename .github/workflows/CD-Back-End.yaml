@@ -28,7 +28,7 @@ jobs:
           APPLICATION_ID=opensign
           MASTER_KEY=your_master_key  # Replace with actual master key or use secrets
           SERVER_URL=https://esign.saas.effi.com.au/
-          MONGODB_URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
+          MONGODB_URI=mongodb+srv://opensign-saas-production-user:0POlAmSKnXzEvz6I@effi.eghdu.mongodb.net
           NODE_ENV=production         # For Node.js production environment
           SERVER_PORT=80              # Set server port to 80
 
