@@ -1,4 +1,4 @@
-name: Production-FrontEnd-Deploy
+name: FrontEnd-Production-Deploy-S3
 
 on:
   workflow_dispatch:   # This allows manual triggers
