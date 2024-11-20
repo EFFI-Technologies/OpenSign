@@ -4,14 +4,13 @@ FROM node:20
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Set environment variables
+# Set environment variables (fixing the names for consistency)
 ENV APPLICATION_ID=opensign
-ENV appName=open_sign_server
-ENV MONGODB__URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
-ENV PARSE__MOUNT=/
-ENV SERVER__URL=https://esign.saas.effi.com.au/
+ENV APP_NAME=open_sign_server
+ENV MONGODB_URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
+ENV PARSE_MOUNT=/
+ENV SERVER_URL=https://esign.saas.effi.com.au/
 ENV PORT=80
-ENV APP_ID=opensign
 ENV NODE_ENV=production
 ENV SERVER_PORT=80
 
@@ -21,11 +20,8 @@ COPY apps/OpenSignServer/package*.json ./
 # Install application dependencies
 RUN npm install
 
-# If you have native dependencies, you'll need extra tools. Uncomment the following line if needed.
-# RUN apk add --no-cache make gcc g++ python3
-
 # Copy the current directory contents into the container
-COPY apps/OpenSignServer/ .
+COPY apps/OpenSignServer/ ./
 
 # Expose port 80
 EXPOSE 80
