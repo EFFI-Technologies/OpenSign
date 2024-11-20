@@ -1,4 +1,4 @@
-name: Production-Backend-Deploy
+name: Backend-Production-Deploy-ECR
 
 on:
   workflow_dispatch:  # Allows manual trigger of the workflow
