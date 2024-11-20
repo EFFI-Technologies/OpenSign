@@ -20,6 +20,12 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    env:  # Environment variables for the entire job
+      PUBLIC_URL: https://esign.effi.com.au/
+      GENERATE_SOURCEMAP: false
+      REACT_APP_SERVERURL: https://esign-service.preprod.effi.com.au/api/app
+      REACT_APP_APPID: opensign
+      REACT_APP_GTM: GTM-123N7LD
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,8 +61,8 @@ jobs:
       - name: Upload all files from OpenSign to S3
         run: |
           cd apps/OpenSign/build
-          aws s3 cp . s3://${{ secrets.BUCKET }}/ --recursive  # Copy all files from OpenSign folder
-        continue-on-error: false  # Ensure this step fails if there's an error
+          aws s3 cp . s3://${{ secrets.BUCKET }}/ --recursive
+        continue-on-error: false
 
   Invalidate:
     if: github.ref_type == 'tag'  # Only run on tag events
