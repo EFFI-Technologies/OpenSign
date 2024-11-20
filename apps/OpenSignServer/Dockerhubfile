@@ -25,7 +25,7 @@ RUN npm install
 COPY apps/OpenSignServer/ .
 
 # Expose port 80
-EXPOSE 80
+EXPOSE 8080
 
 # Run the application
 CMD ["npm", "start"]
