@@ -26,7 +26,7 @@ jobs:
           CONTAINER_NAME=opensign-service-api-saas-production  # Container name as per ECS config
           APP_ID=effisign
           APPLICATION_ID=effisign
-          MASTER_KEY=PdRwTfGhNykL
+          MASTER_KEY1=PdRwTfGhNykL
           SERVER_URL=https://esign-service.preprod.effi.com.au/
           MONGODB_URI=mongodb+srv://opensign-saas-production-user:0POlAmSKnXzEvz6I@effi.eghdu.mongodb.net
           NODE_ENV=production         # For Node.js production environment
@@ -36,7 +36,7 @@ jobs:
             --build-arg NODE_ENV=$NODE_ENV \
             --build-arg SERVER_PORT=$SERVER_PORT \
             --build-arg APP_ID=$APP_ID \
-            --build-arg MASTER_KEY=$MASTER_KEY \
+            --build-arg MASTER_KEY=$MASTER_KEY1 \
             --build-arg APPLICATION_ID=$APPLICATION_ID \
             --build-arg SERVER_URL=$SERVER_URL \
             --build-arg MONGODB_URI=$MONGODB_URI \
