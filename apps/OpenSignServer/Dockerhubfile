@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 # Set environment variables (fixing the names for consistency)
 ENV APPLICATION_ID=opensign
 ENV APP_NAME=open_sign_server
-ENV MONGODB_URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
+ENV MONGODB_URI=mongodb+srv://opensign-saas-production-user:0POlAmSKnXzEvz6I@effi.eghdu.mongodb.net
 ENV PARSE_MOUNT=/
 ENV SERVER_URL=https://esign.saas.effi.com.au/
 ENV PORT=80
