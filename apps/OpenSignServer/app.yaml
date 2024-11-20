@@ -11,3 +11,12 @@ env_variables:
   # FILE_KEY: <your-file-key>
   # PARSE_MOUNT: /parse
   # CLOUD_CODE_MAIN:  
+
+  health_check:
+  enable_health_check: True
+  check_interval_sec: 30          # Time between health checks (in seconds)
+  timeout_sec: 4                  # Time to wait for a health check response
+  unhealthy_threshold: 2          # Number of consecutive failures before marking as unhealthy
+  healthy_threshold: 2            # Number of consecutive successes before marking as healthy
+  restart_threshold: 2            # Number of consecutive unhealthy states before restarting
+  path: /health                   # Path to the health check endpoint
