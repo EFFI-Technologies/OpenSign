@@ -1,4 +1,4 @@
-name: Deploy-Production-Backend-Service-ECR
+name: Production-Backend-Deploy
 
 on:
   workflow_dispatch:  # Allows manual trigger of the workflow
@@ -15,32 +15,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Docker Buildx
+      # Step 3: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Step 3: Build and tag the Docker image with the correct tag
+      # Step 4: Build and tag the Docker image with the correct tag
       - name: Build Docker image
         run: |
           IMAGE_TAG=saas-production
           CONTAINER_NAME=opensign-service-api-saas-production  # Container name as per ECS config
-          APPLICATION=opensign
-          MASTER_KEY=your_master_key  # Replace with actual master key or use secrets
-          MONGODB_URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
-          SERVER_URL=https://esign.saas.effi.com.au/
-          
-          docker build \
-            --build-arg APPLICATION_ID=$APP_ID \
-            --build-arg MASTER_KEY=$MASTER_KEY \
-            --build-arg SERVER_URL=$SERVER_URL \
-            --build-arg MONGODB_URI=$MONGODB_URI \
-            -t $CONTAINER_NAME:$IMAGE_TAG \
-            --expose 80 \
-            -f apps/OpenSignServer/Dockerhubfile .
-          
+          docker build -t $CONTAINER_NAME:$IMAGE_TAG -f apps/OpenSignServer/Dockerfile .
           echo "Built and tagged image $CONTAINER_NAME:$IMAGE_TAG"
 
-      # Step 4: Configure AWS credentials from OIDC Provider
+      # Step 5: Configure AWS credentials from OIDC Provider
       - name: Configure AWS credentials from OIDC Provider
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -49,13 +36,13 @@ jobs:
           role-session-name: GitHub-CI-CD-Session  # Custom session name
           role-duration-seconds: 900  # Duration of the session (15 minutes)
 
-      # Step 5: Log in to Amazon ECR
+      # Step 6: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-ids: 241924812472  # 12-digit AWS Account ID
 
-      # Step 6: Tag Docker image for ECR
+      # Step 7: Tag Docker image for ECR
       - name: Tag Docker image for ECR
         run: |
           IMAGE_TAG=saas-production
@@ -64,7 +51,7 @@ jobs:
           docker tag $CONTAINER_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
           echo "Tagged image as $REPOSITORY_URI:$IMAGE_TAG"
 
-      # Step 7: Push Docker image to ECR
+      # Step 8: Push Docker image to ECR
       - name: Push Docker image to ECR
         run: |
           IMAGE_TAG=saas-production
