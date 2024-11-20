@@ -26,8 +26,8 @@
         "ports": [
           {
             "name": "web",
-            "port": 8080,
-            "targetPort": 8080
+            "port": 80,
+            "targetPort": 80
           }
         ],
         "selector": {
@@ -173,7 +173,7 @@
                 "image": " ",
                 "ports": [
                   {
-                    "containerPort": 8080
+                    "containerPort": 80
                   }
                 ],
                 "env": [
@@ -199,7 +199,7 @@
                   },
                   {
                     "name": "PORT",
-                    "value": "8080"
+                    "value": "80"
                   },
                   {
                     "name": "DATABASE_URI",
@@ -223,7 +223,7 @@
                   "initialDelaySeconds": 3,
                   "httpGet": {
                     "path": "/test",
-                    "port": 8080
+                    "port": 80
                   }
                 },
                 "livenessProbe": {
@@ -231,7 +231,7 @@
                     "initialDelaySeconds": 30,
                     "httpGet": {
                         "path": "/test",
-                        "port": 8080
+                        "port": 80
                     }
                 },
                 "resources": {

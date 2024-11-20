@@ -45,7 +45,7 @@ const makeEmail = async (to, from, subject, html, url, pdfName) => {
           });
         } else {
           const path = new URL(url)?.pathname;
-          const localurl = 'http://localhost:8080' + path;
+          const localurl = 'http://localhost:80' + path;
           http.get(localurl, async function (response) {
             response.pipe(Pdf);
             response.on('end', () => resolve('success'));

@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-export const cloudServerUrl = 'http://localhost:8080/app';
+export const cloudServerUrl = 'http://localhost:80/app';
 export const appName = process.env.APP_NAME || 'OpenSign™';
 export function customAPIurl() {
   const url = new URL(cloudServerUrl);

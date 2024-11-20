@@ -1,7 +1,7 @@
 {$HOST_URL} {
     reverse_proxy client:3000
     handle_path /app/* {
-        reverse_proxy server:8080
+        reverse_proxy server:80
             rewrite * /app{uri}
     }
 }

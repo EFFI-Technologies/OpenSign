@@ -11,7 +11,7 @@ ENV MASTER__KEY=""
 ENV MONGODB__URI=mongodb://opensign-saas-production-user:0POlAmSKnXzEvz6I@opensign-saas-production:27017
 ENV PARSE__MOUNT=/
 ENV SERVER__URL=https://esign.saas.effi.com.au/
-ENV PORT=8080
+ENV PORT=80
 
 # Copy package.json and package-lock.json first to leverage Docker cache
 COPY apps/OpenSignServer/package*.json ./
@@ -26,7 +26,7 @@ RUN npm install
 COPY apps/OpenSignServer/ .
 
 # Expose port 80
-EXPOSE 8080
+EXPOSE 80
 
 # Run the application
 CMD ["npm", "start"]

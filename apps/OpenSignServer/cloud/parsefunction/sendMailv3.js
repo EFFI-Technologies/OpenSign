@@ -41,7 +41,7 @@ async function sendMailProvider(req, plan, monthchange) {
             });
           } else {
             const path = new URL(req.params.url)?.pathname;
-            const localurl = 'http://localhost:8080' + path;
+            const localurl = 'http://localhost:80' + path;
             http.get(localurl, async function (response) {
               response.pipe(Pdf);
               response.on('end', () => resolve('success'));
@@ -208,7 +208,7 @@ async function sendcustomsmtp(extRes, req) {
           });
         } else {
           const path = new URL(req.params.url)?.pathname;
-          const localurl = 'http://localhost:8080' + path;
+          const localurl = 'http://localhost:80' + path;
           http.get(localurl, async function (response) {
             response.pipe(Pdf);
             response.on('end', () => resolve('success'));
