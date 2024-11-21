@@ -55,7 +55,7 @@ function App() {
   const handleCredentials = () => {
     const appId = process.env.REACT_APP_APPID
       ? process.env.REACT_APP_APPID
-      : "opensign";
+      : "effisign";
     const baseurl = serverUrl_fn();
     try {
       localStorage.setItem("baseUrl", `${baseurl}/`);

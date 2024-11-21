@@ -38,10 +38,10 @@ const PublicScriptFileWrapper = () => {
   return <PdfRequestFiles {...props} />;
 };
 
-const appId = isPublicStaging ? "opensign" : "legadranaxn";
+const appId = isPublicStaging ? "effisign" : "legadranaxn";
 const serverUrl = isPublicStaging
-  ? "https://staging-app.opensignlabs.com/api/app"
-  : "https://app.opensignlabs.com/api/app";
+  ? "https://staging-app.com/api/app"
+  : "https://app.com/api/app";
 
 localStorage.setItem("baseUrl", `${serverUrl}/`);
 localStorage.setItem("parseAppId", appId);

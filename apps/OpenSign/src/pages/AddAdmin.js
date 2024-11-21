@@ -451,7 +451,7 @@ const AddAdmin = () => {
                         className="underline cursor-pointer ml-1"
                         onClick={() =>
                           openInNewTab(
-                            "https://www.opensignlabs.com/terms-and-conditions"
+                            "https://effi.com.au"
                           )
                         }
                       >
@@ -460,7 +460,7 @@ const AddAdmin = () => {
                       <span>.</span>
                     </div>
                     <div className="mt-2.5 ml-1 flex flex-row items-center">
-                      <input
+                      {/* <input
                         type="checkbox"
                         className="op-checkbox op-checkbox-sm"
                         id="subscribetoopensign"
@@ -472,7 +472,7 @@ const AddAdmin = () => {
                         htmlFor="subscribetoopensign"
                       >
                         {t("subscribe-to-opensign")}
-                      </label>
+                      </label> */}
                     </div>
                   </div>
                   <div className="mx-4 text-center text-xs font-bold mb-3">

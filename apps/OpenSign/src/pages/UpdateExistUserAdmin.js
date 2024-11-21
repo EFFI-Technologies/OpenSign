@@ -162,7 +162,7 @@ const UpdateExistUserAdmin = () => {
                       className="text-xs cursor-pointer ml-1 mb-0"
                       htmlFor="termsandcondition"
                     >
-                      Subscribe to OpenSign newsletter
+                      Subscribe to EffiSign newsletter
                     </label>
                   </div> */}
                   </div>

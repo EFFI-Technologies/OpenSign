@@ -51,7 +51,7 @@
   "docs": "Docs",
   "session-expired": "Your session has expired.",
   "public-profile-help": "This is your public URL. Copy or share it with the signer, and you will be able to see all your publicly set templates.",
-  "tagline-help": "This Tagline will appear on your EffiSign public profile for ex. https://opensign.me/alex",
+  "tagline-help": "This Tagline will appear on your EffiSign public profile for ex. https://esign.effi.com.au",
   "welcome": "Welcome Back!",
   "Login-to-your-account": "Login to your account",
   "password": "Password",
@@ -597,7 +597,7 @@
     "Recent signature requests": "This is a list of documents that are waiting for your signature.",
     "Recently sent for signatures": "This is a list of documents you've sent to other parties for signature.",
     "Drafts": "This are documents you have started but have not finalized for sending.",
-    "public-template": "This video demonstrates how to set up your personalized public profile, such as ‘https://opensign.me/your-username’. You’ll also learn how to customize your tagline and make your templates available for public signing."
+    "public-template": "This video demonstrates how to set up your personalized public profile, such as ‘https://esign.effi.com.au. You’ll also learn how to customize your tagline and make your templates available for public signing."
    },
   "enter-email-plaholder": "Add an email address and hit enter",
   "success-email-alert": "Email sent successfully!",

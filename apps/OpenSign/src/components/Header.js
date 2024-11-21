@@ -120,11 +120,6 @@ const Header = ({ showSidebar }) => {
     };
   }, [isOpen]);
   const handleConsoleRedirect = () => {
-    // if (isStaging) {
-    //   window.open(" https://staging-console.opensignlabs.com/");
-    // } else {
-    //   window.open("https://console.opensignlabs.com/");
-    // }
   };
   const handleNavigation = () => {
     navigate("/subscription");

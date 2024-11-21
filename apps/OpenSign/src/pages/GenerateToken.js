@@ -247,7 +247,7 @@ function GenerateToken() {
         <>
           <div className="bg-base-100 text-base-content flex flex-col justify-center shadow-md rounded-box mb-3">
             <h1 className={"ml-4 mt-3 mb-2 font-semibold"}>
-              OpenSign™ {t("API")}{" "}
+              EffiSign {t("API")}{" "}
               <Tooltip
                 url="https://docs.opensignlabs.com/docs/API-docs/opensign-api-v-1"
                 isSubscribe={true}

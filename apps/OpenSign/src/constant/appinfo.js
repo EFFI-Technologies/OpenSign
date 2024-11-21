@@ -16,7 +16,7 @@ export function serverUrl_fn() {
 }
 export const appInfo = {
   applogo: logo,
-  appId: process.env.REACT_APP_APPID ? process.env.REACT_APP_APPID : "opensign",
+  appId: process.env.REACT_APP_APPID ? process.env.REACT_APP_APPID : "effiSign",
   baseUrl: serverUrl_fn(),
   defaultRole: "contracts_User",
   fbAppId: process.env.REACT_APP_FBAPPID

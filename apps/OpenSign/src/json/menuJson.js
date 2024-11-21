@@ -51,7 +51,7 @@ const sidebarList = [
   },
   {
     icon: "fa-light fa-folder",
-    title: "OpenSign™ Drive",
+    title: "EffiSign Drive",
     target: "_self",
     pageType: "",
     description: "",

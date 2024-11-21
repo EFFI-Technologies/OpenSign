@@ -222,7 +222,7 @@ const SelectFolder = ({ required, onSuccess, folderCls, isReset }) => {
           <div className="pt-1 text-[#ac4848] text-[14px] font-[500]">
             <span
               className="cursor-pointer"
-              title="OpenSign™ Drive"
+              title="EffiSign Drive"
               onClick={(e) => removeTabListItem(e)}
             >
               {t("OpenSign-drive")} /{" "}

@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 
 const SocialMedia = () => {
   const { t } = useTranslation();
-
+return null;
   return (
     <React.Fragment>
       <NavLink

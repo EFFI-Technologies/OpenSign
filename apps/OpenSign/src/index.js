@@ -22,7 +22,7 @@ import "./i18n";
 
 const appId = process.env.REACT_APP_APPID
   ? process.env.REACT_APP_APPID
-  : "opensign";
+  : "effisign";
 const serverUrl = serverUrl_fn();
 Parse.initialize(appId);
 Parse.serverURL = serverUrl;

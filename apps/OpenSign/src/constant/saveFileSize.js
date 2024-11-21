@@ -2,7 +2,7 @@ import axios from "axios";
 import { serverUrl_fn } from "./appinfo";
 const parseAppId = process.env.REACT_APP_APPID
   ? process.env.REACT_APP_APPID
-  : "opensign";
+  : "effisign";
 const serverUrl = serverUrl_fn();
 export const SaveFileSize = async (size, imageUrl, tenantId) => {
   //checking server url and save file's size
