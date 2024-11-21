@@ -96,7 +96,6 @@ export class AppComponent{
     setTimeout(() => setIsCopied(false), 3000);
   };
 
-  return null;
   return (
     <div className="mt-4 border-t-[1px]">
       <div className="flex justify-center items-center mt-2">
