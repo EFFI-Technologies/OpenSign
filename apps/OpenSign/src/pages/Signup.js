@@ -507,7 +507,7 @@ const Signup = () => {
                           className="underline cursor-pointer ml-1"
                           onClick={() =>
                             openInNewTab(
-                              "https://www.opensignlabs.com/terms-and-conditions"
+                              "https://esign.effi.com.au/terms-and-conditions"
                             )
                           }
                         >

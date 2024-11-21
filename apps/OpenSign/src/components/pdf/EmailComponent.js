@@ -54,7 +54,7 @@ function EmailComponent({
     for (let i = 0; i < emailList.length; i++) {
       try {
         const imgPng =
-          "https://qikinnovation.ams3.digitaloceanspaces.com/logo.png";
+          "https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png";
 
         let url = `${localStorage.getItem("baseUrl")}functions/sendmailv3`;
         const headers = {

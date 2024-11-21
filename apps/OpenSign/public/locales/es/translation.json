@@ -674,7 +674,7 @@
   "admin-exists": "El administrador ya existe. Por favor, inicia sesión en la aplicación usando las credenciales de administrador para poder administrar los usuarios.",
   "public-tour-message": "Por favor, convierte la plantilla en pública para copiar la URL pública",
   "add-user-template": "Es necesario agregar un rol antes de poder agregarle campos.",
-  "pdf-uncompatible": "Este pdf no es compatible con opensign, comuníquese con <support@opensignlabs.com>",
+  "pdf-uncompatible": "Este pdf no es compatible con opensign, comuníquese con <support@effi.com.au>",
   "enable-tour": "Habilitar recorrido",
    "istourenabled-help":{
      "p1": "Esto permitirá realizar una visita guiada para los firmantes, brindando instrucciones durante el proceso de firma.",

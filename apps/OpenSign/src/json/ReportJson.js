@@ -26,13 +26,13 @@ export default function reportJson(id) {
   const templateReport = ["Sr.No", "Title", "File", "Owner", "Signers"];
   const templateSubAction = isEnableSubscription
     ? [
-        {
-          btnId: "2435",
-          btnLabel: "Embed",
-          hoverLabel: "Embed",
-          btnIcon: "fa-light fa-code",
-          action: "Embed"
-        },
+        // {
+        //   btnId: "2435",
+        //   btnLabel: "Embed",
+        //   hoverLabel: "Embed",
+        //   btnIcon: "fa-light fa-code",
+        //   action: "Embed"
+        // },
         {
           btnId: "2436",
           btnLabel: "Copy TemplateId",
@@ -40,13 +40,13 @@ export default function reportJson(id) {
           btnIcon: "fa-light fa-copy",
           action: "CopyTemplateId"
         },
-        {
-          btnId: "2437",
-          btnLabel: "Copy Public URL",
-          hoverLabel: "Copy Public URL",
-          btnIcon: "fa-light fa-copy",
-          action: "CopyPublicURL"
-        }
+        // {
+        //   btnId: "2437",
+        //   btnLabel: "Copy Public URL",
+        //   hoverLabel: "Copy Public URL",
+        //   btnIcon: "fa-light fa-copy",
+        //   action: "CopyPublicURL"
+        // }
       ]
     : [];
   switch (id) {

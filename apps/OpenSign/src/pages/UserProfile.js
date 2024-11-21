@@ -638,7 +638,7 @@ function UserProfile() {
                       {t("disable-documentId")} :{" "}
                       <Tooltip
                         url={
-                          "https://docs.opensignlabs.com/docs/help/Settings/disabledocumentid"
+                          "https://docs.esign.effi.com.au/docs/help/Settings/disabledocumentid"
                         }
                       />
                       {!validplan[isPlan.plan] && isEnableSubscription && (

@@ -308,21 +308,21 @@ const UserList = () => {
                   </span>
                 </div>
                 <div className="flex flex-row gap-2 items-center">
-                  {isEnableSubscription && isSubscribe?.isSuperAdmin && (
+                  {/* {isEnableSubscription && isSubscribe?.isSuperAdmin && (
                     <div
                       className="hidden md:flex op-btn op-btn-sm h-[35px] op-btn-primary op-btn-outline text-xs mb-0.5"
                       onClick={() => handleModal("addseats")}
                     >
                       {t("buy-users")}
                     </div>
-                  )}
+                  )} */}
                   <div
                     className="cursor-pointer"
                     onClick={() => handleModal("form")}
                   >
                     <i className="fa-light fa-square-plus text-accent text-[30px] md:text-[40px]"></i>
                   </div>
-                  {isEnableSubscription && isSubscribe?.isSuperAdmin && (
+                  {/* {isEnableSubscription && isSubscribe?.isSuperAdmin && (
                     <div
                       className="cursor-pointer relative md:hidden mb-0.5"
                       onClick={() => handleModal("options")}
@@ -338,7 +338,7 @@ const UserList = () => {
                         </ul>
                       )}
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
               <div className="overflow-x-auto w-full">

@@ -980,7 +980,7 @@ function PdfRequestFiles(props) {
 
                       try {
                         const imgPng =
-                          "https://qikinnovation.ams3.digitaloceanspaces.com/logo.png";
+                          "https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png";
                         let url = `${localStorage.getItem(
                           "baseUrl"
                         )}functions/sendmailv3`;
@@ -1004,13 +1004,13 @@ function PdfRequestFiles(props) {
                           );
                         }
                         const hostPublicUrl = isStaging
-                          ? "https://staging-app.opensignlabs.com"
-                          : "https://app.opensignlabs.com";
+                          ? "https://staging-app.esign.effi.com.au"
+                          : "https://app.esign.effi.com.au";
                         let signPdf = props?.templateId
                           ? `${hostPublicUrl}/login/${encodeBase64}`
                           : `${hostUrl}/login/${encodeBase64}`;
                         const openSignUrl =
-                          "https://www.opensignlabs.com/contact-us";
+                          "https://effi.com.au/contact";
                         const orgName = pdfDetails[0]?.ExtUserPtr.Company
                           ? pdfDetails[0].ExtUserPtr.Company
                           : "";

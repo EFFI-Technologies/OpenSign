@@ -81,7 +81,7 @@ function GenerateToken() {
       }
       try {
         const body = { email: Parse?.User?.current()?.getEmail() || "" };
-        const testurl = "https://sandbox.opensignlabs.com/api/gettesttoken";
+        const testurl = "https://sandbox.esign.effi.com.au/api/gettesttoken";
         const testRes = await axios.post(testurl, body);
         setApiTestToken(testRes.data?.token);
       } catch (err) {
@@ -206,7 +206,7 @@ function GenerateToken() {
     setIsLoader(true);
     // setIsModal((obj) => ({ ...obj, generateapi: false }));
     try {
-      const url = "https://sandbox.opensignlabs.com/api/generatetesttoken";
+      const url = "https://sandbox.esign.effi.com.au/api/generatetesttoken";
       const headers = {
         "Content-Type": "application/json",
         token: apitestToken || "1"
@@ -249,12 +249,12 @@ function GenerateToken() {
             <h1 className={"ml-4 mt-3 mb-2 font-semibold"}>
               EffiSign {t("API")}{" "}
               <Tooltip
-                url="https://docs.opensignlabs.com/docs/API-docs/opensign-api-v-1"
+                url="https://docs.esign.effi.com.au/docs/API-docs/opensign-api-v-1"
                 isSubscribe={true}
               />
             </h1>
             <ul className="w-full flex flex-col p-2 text-sm">
-              <li className="flex flex-col md:flex-row justify-between items-center border-t-[1px] border-gray-300 break-all py-2">
+              {/* <li className="flex flex-col md:flex-row justify-between items-center border-t-[1px] border-gray-300 break-all py-2">
                 <div className="w-full md:w-[70%] flex-col md:flex-row text-xs md:text-[15px] flex items-center gap-x-5">
                   <span className="ml-1">
                     <span className="font-medium">API Test Token : </span>
@@ -285,7 +285,7 @@ function GenerateToken() {
                     ? t("regenerate-test-token")
                     : t("generate-test-token")}
                 </button>
-              </li>
+              </li> */}
               <li className="flex flex-col md:flex-row justify-between items-center border-y-[1px] border-gray-300 break-all py-2">
                 <div className="w-full md:w-[70%] flex-col md:flex-row text-xs md:text-[15px] flex items-center gap-x-5">
                   <span className="ml-1">
