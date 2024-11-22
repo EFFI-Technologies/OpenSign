@@ -755,9 +755,9 @@ function Login() {
                       )}
                     </div>
                   </form>
-                  {(appInfo.googleClietId || isEnableSubscription) && (
+                  {/* {(appInfo.googleClietId || isEnableSubscription) && (
                     <div className="op-divider my-4 text-sm">{t("or")}</div>
-                  )}
+                  )} */}
                   <div className="flex flex-col justify-center items-center gap-y-3">
                     {/* {appInfo?.fbAppId && (
                       <LoginFacebook
@@ -775,14 +775,14 @@ function Login() {
                         setThirdpartyLoader={setThirdpartyLoader}
                       />
                     )}
-                    {isEnableSubscription && (
+                    {/* {isEnableSubscription && (
                       <div
                         className="cursor-pointer border-[1px] border-gray-300 rounded px-[40px] py-2 font-semibold text-sm hover:border-[#d2e3fc] hover:bg-[#ecf3feb7]"
                         onClick={() => handleSignInWithSSO()}
                       >
                         {t("sign-SSO")}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
                 {width >= 768 && (
