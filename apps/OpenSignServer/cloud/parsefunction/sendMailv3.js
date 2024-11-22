@@ -44,7 +44,8 @@ async function sendMailProvider(req, plan, monthchange) {
             });
           } else {
             const path = new URL(req.params.url)?.pathname;
-            const localurl = 'http://localhost:8080' + path;
+            const addr = process.env.CLOUD_PORT ? `http://localhost:${process.env.CLOUD_PORT}` : 'http://localhost';
+            const localurl = addr + path;
             http.get(localurl, async function (response) {
               response.pipe(Pdf);
               response.on('end', () => resolve('success'));
