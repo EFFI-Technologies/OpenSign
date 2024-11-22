@@ -362,6 +362,7 @@ async function PDF(req) {
       let PdfBuffer = Buffer.from(req.params.pdfFile, 'base64');
       //  `P12Buffer` used to create buffer from p12 certificate
       let pfxFile = process.env.PFX_BASE64?.PFX_BASE64 || process.env.PFX_BASE64;
+      console.log("pfxFile", pfxFile, process.env.PFX_BASE64);
       let passphrase = process.env.PASS_PHRASE;
       if (_resDoc?.ExtUserPtr?.TenantId?.PfxFile?.base64) {
         pfxFile = _resDoc?.ExtUserPtr?.TenantId?.PfxFile?.base64;
