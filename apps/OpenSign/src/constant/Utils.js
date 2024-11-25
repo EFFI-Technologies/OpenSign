@@ -2006,7 +2006,7 @@ export const getTenantDetails = async (objectId, jwttoken) => {
       }
     });
     if (res) {
-      const updateRes = JSON.parse(JSON.stringify(res.data.result));
+      const updateRes = JSON.parse(JSON.stringify(res.data?.result || {}));
       return updateRes;
     }
   } catch (err) {
