@@ -200,7 +200,7 @@ function PlaceHolderSign() {
         setRequestSubject(defaultSubject);
         const tenantDetails = await getTenantDetails(user?.objectId);
         if (tenantDetails && tenantDetails === "user does not exist!") {
-          alert(t("user-not-exist"));
+          // alert(t("user-not-exist"));
         } else if (tenantDetails) {
           if (tenantDetails?.RequestBody) {
             setRequestBody(tenantDetails?.RequestBody);
@@ -208,10 +208,10 @@ function PlaceHolderSign() {
           }
         }
       } catch (e) {
-        alert(t("user-not-exist"));
+        //alert(t("user-not-exist"));
       }
     } else {
-      alert(t("user-not-exist"));
+     // alert(t("user-not-exist"));
     }
   };
 
