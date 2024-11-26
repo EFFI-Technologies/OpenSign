@@ -221,7 +221,7 @@ function GuestLogin() {
           </div>
         ) : (
           <div className="m-1 md:m-2 p-[30px] text-base-content bg-base-100 op-card shadow-md">
-            <div className="md:w-[250px] md:h-[66px] inline-block overflow-hidden mt-2 mb-11">
+            <div className="md:w-[250px] md:h-[88px] inline-block overflow-hidden mt-2 mb-11">
               {appLogo && (
                 <img src={appLogo} className="object-contain" alt="logo" />
               )}

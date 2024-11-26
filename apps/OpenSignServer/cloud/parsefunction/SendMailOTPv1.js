@@ -1,4 +1,6 @@
-import { appName, smtpenable, updateMailCount } from '../../Utils.js';
+import axios from 'axios';
+import { appName, updateMailCount } from '../../Utils.js';
+import { cloudServerUrl } from '../../Utils.js';
 async function getDocument(docId) {
   try {
     const query = new Parse.Query('contracts_Document');
@@ -23,24 +25,31 @@ async function sendMailOTPv1(request) {
     let code = Math.floor(1000 + Math.random() * 9000);
     let email = request.params.email;
     var TenantId = request.params.TenantId ? request.params.TenantId : undefined;
+    const extUserId = await getDocument(request.params?.docId);
 
     if (email) {
       const recipient = request.params.email;
-      const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
       try {
-        await Parse.Cloud.sendEmail({
-          from: appName + ' <' + mailsender + '>',
+        let url = `${cloudServerUrl}/functions/sendmailv3/`;
+        const headers = {
+          'Content-Type': 'application/json',
+          'X-Parse-Application-Id': process.env.APP_ID,
+          'X-Parse-Master-Key': process.env.MASTER_KEY,
+        };
+        let params = {
           recipient: recipient,
           subject: `Your ${appName} OTP`,
-          text: 'This email is a test.',
+          from: 'no-reply@esign.com.au',
           html:
             `<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body><div style='background-color:#f5f5f5;padding:20px'><div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'><div style='background-color:red;padding:2px;font-family:system-ui; background-color:#47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',>OTP Verification</p></div><div style='padding:20px'><p style='font-family:system-ui;font-size:14px'>Your OTP for ${appName} verification is:</p><p style=' text-decoration: none; font-weight: bolder; color:blue;font-size:45px;margin:20px'>` +
             code +
             '</p></div> </div> </div></body></html>',
-        });
+          extUserId: extUserId,
+        };
+        await axios.post(url, params, { headers: headers });
         console.log('OTP sent', code);
         if (request.params?.docId) {
-          const extUserId = await getDocument(request.params?.docId);
           if (extUserId) {
             updateMailCount(extUserId);
           }
@@ -67,7 +76,7 @@ async function sendMailOTPv1(request) {
         newOtpQuery.set('Email', email);
         newOtpQuery.set('TenantId', TenantId);
         await newOtpQuery.save(null, { useMasterKey: true });
-          console.log("new otp Res in tempSendOtp ", newRes);
+        console.log('new otp Res in tempSendOtp ', newRes);
       }
       return 'Otp send';
     } else {

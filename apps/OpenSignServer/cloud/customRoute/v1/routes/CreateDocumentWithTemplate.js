@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { cloudServerUrl, customAPIurl, replaceMailVaribles } from '../../../../Utils.js';
 import { generateSessionTokenByUsername } from './login.js';
-import { request } from 'express';
 
 // `sendDoctoWebhook` is used to send res data of document on webhook
 async function sendDoctoWebhook(doc, WebhookUrl, userId) {
