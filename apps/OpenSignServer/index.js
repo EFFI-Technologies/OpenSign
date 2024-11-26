@@ -92,7 +92,7 @@ if (smtpenable) {
   sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
   isMailAdapter = true;
 }
-const mailsender = smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 export const config = {
   databaseURI:
     process.env.DATABASE_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/dev',

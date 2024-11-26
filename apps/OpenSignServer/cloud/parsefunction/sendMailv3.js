@@ -93,7 +93,7 @@ async function sendMailProvider(req, plan, monthchange) {
           attachment = [file];
         }
         const from = req.params.from || '';
-        const mailsender = smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+        const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
         const messageParams = {
           from: from + ' <' + mailsender + '>',
@@ -151,7 +151,7 @@ async function sendMailProvider(req, plan, monthchange) {
       }
     } else {
       const from = req.params.from || '';
-      const mailsender = smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const mailsender = '';// smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
       const messageParams = {
         from: mailsender ? from + ' <' + mailsender + '>' : from,

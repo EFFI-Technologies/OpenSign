@@ -26,7 +26,7 @@ async function sendMailOTPv1(request) {
 
     if (email) {
       const recipient = request.params.email;
-      const mailsender = smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
       try {
         await Parse.Cloud.sendEmail({
           from: appName + ' <' + mailsender + '>',
@@ -67,7 +67,7 @@ async function sendMailOTPv1(request) {
         newOtpQuery.set('Email', email);
         newOtpQuery.set('TenantId', TenantId);
         await newOtpQuery.save(null, { useMasterKey: true });
-        //   console.log("new otp Res in tempSendOtp ", newRes);
+          console.log("new otp Res in tempSendOtp ", newRes);
       }
       return 'Otp send';
     } else {
