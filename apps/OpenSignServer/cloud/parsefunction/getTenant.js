@@ -42,15 +42,15 @@ export default async function getTenant(request) {
     }
   } else if (userId) {
     try {
-      const tenantCreditsQuery = new Parse.Query('partners_Tenant');
+      const tenantCreditsQuery = new Parse.Query('contracts_Users');
       tenantCreditsQuery.equalTo('UserId', {
         __type: 'Pointer',
         className: '_User',
         objectId: userId,
       });
-      const res = await tenantCreditsQuery.first();
+      const res = await tenantCreditsQuery.first({ useMasterKey: true });
       if (res) {
-        return res;
+        return { objectId: res.get('TenantId')?.id };
       }
     } catch (e) {
       return 'user does not exist!';
