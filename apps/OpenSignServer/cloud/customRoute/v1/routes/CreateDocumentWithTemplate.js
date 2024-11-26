@@ -98,7 +98,7 @@ export async function createDocumentWithTemplate(request, response) {
       const extUsers = new Parse.Query('contracts_Users');
       extUsers.equalTo('UserId', userPtr);
       const extUser = await extUsers.first({ useMasterKey: true });
-
+      const tenantId = extUser.get('TenantId')?.id;
       const subscription = new Parse.Query('contracts_Subscriptions');
       subscription.equalTo('TenantId', {
         __type: 'Pointer',
@@ -271,7 +271,8 @@ export async function createDocumentWithTemplate(request, response) {
                   }
                   for (let i = 0; i < contactMail.length; i++) {
                     try {
-                      const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+                      const imgPng =
+                        'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
                       let url = `${cloudServerUrl}/functions/sendmailv3/`;
                       const headers = {
                         'Content-Type': 'application/json',
@@ -402,7 +403,7 @@ export async function createDocumentWithTemplate(request, response) {
                 let { sessionToken } = await generateSessionTokenByUsername(
                   parseUser.userId.username
                 );
-                const url = `${process.env.PUBLIC_URL}/login/sender/${sessionToken}?goto=/placeHolderSign/${res.id}&returnUrl=${returnUrl}`;
+                const url = `${process.env.PUBLIC_URL}/login/sender/${sessionToken}?goto=/placeHolderSign/${res.id}&tenantId=${tenantId}&returnUrl=${returnUrl}`;
                 return response.json({
                   objectId: res.id,
                   success: true,
