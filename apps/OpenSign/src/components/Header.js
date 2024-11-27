@@ -192,11 +192,11 @@ const Header = ({ showSidebar }) => {
         </div>
         <div className="flex-1 ml-2">
           <div className="h-[25px] md:h-[40px] w-auto overflow-hidden">
-            <img
+            {/* <img
               className="object-contain h-full w-auto"
               src={applogo}
               alt="img"
-            />
+            /> */}
           </div>
         </div>
         <div id="profile-menu" className="flex-none gap-2">
