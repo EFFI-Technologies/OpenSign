@@ -13,6 +13,10 @@ const masterKEY = process.env.MASTER_KEY;
 const eSignName = 'effisign';
 const eSigncontact = 'https://effi.com.au/contact/';
 // `updateDoc` is used to create url in from pdfFile
+
+function removeSpecialCharacters(str) {
+  return str.replace(/[^a-zA-Z0-9 ]/g, '');
+}
 async function uploadFile(pdfName, filepath, adapter) {
   try {
     const filedata = fs.readFileSync(filepath);
@@ -102,7 +106,8 @@ async function sendCompletedMail(obj) {
   const sender = obj.doc.ExtUserPtr;
   const pdfName = doc.Name;
 
-  const mailLogo = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+  const mailLogo =
+    'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
   //const recipient =
   //  doc?.Signers?.length > 0 ? doc?.Signers?.map(x => x?.Email)?.join(',') : sender.Email;
 
@@ -361,7 +366,12 @@ async function PDF(req) {
       //  `PdfBuffer` used to create buffer from pdf file
       let PdfBuffer = Buffer.from(req.params.pdfFile, 'base64');
       //  `P12Buffer` used to create buffer from p12 certificate
-      let pfxFile = JSON.parse(process.env.PFX_BASE64).PFX_BASE64;
+      let pfxFile;
+      try {
+        pfxFile = JSON.parse(process.env.PFX_BASE64).PFX_BASE64;
+      } catch {
+        pfxFile = process.env.PFX_BASE64;
+      }
       let passphrase = process.env.PASS_PHRASE;
       if (_resDoc?.ExtUserPtr?.TenantId?.PfxFile?.base64) {
         pfxFile = _resDoc?.ExtUserPtr?.TenantId?.PfxFile?.base64;
@@ -389,7 +399,7 @@ async function PDF(req) {
         isCompleted = true;
       }
       const randomNumber = Math.floor(Math.random() * 5000);
-      const docName = _resDoc?.Name?.replace(/\s+/g, '_')?.toLowerCase();
+      const docName = removeSpecialCharacters(_resDoc?.Name?.replace(/\s+/g, '_')?.toLowerCase());
       const name = `signed_${docName}_${randomNumber}.pdf`;
       const filePath = `./exports/${name}`;
       let pdfSize = PdfBuffer.length;
