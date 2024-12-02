@@ -203,7 +203,6 @@ export default async function createDocumentwithCoordinate(request, response) {
                   const res = await axios.post(createContactUrl, body, {
                     headers: { 'Content-Type': 'application/json', 'x-api-token': reqToken },
                   });
-                  // console.log('res ', res.data);
                   const contactPtr = {
                     __type: 'Pointer',
                     className: 'contracts_Contactbook',
@@ -219,6 +218,7 @@ export default async function createDocumentwithCoordinate(request, response) {
                       className: 'contracts_Contactbook',
                       objectId: err.response.data?.objectId,
                     };
+
                     const newObj = { ...element, contactPtr: contactPtr, index: index };
                     contact.push(newObj);
                   }
@@ -391,6 +391,8 @@ export default async function createDocumentwithCoordinate(request, response) {
                     extUserId: extUser.id,
                     mailProvider: parseExtUser?.active_mail_adapter || '',
                   };
+
+                  console.log("email params", params);
 
                   await axios.post(url, params, { headers: headers });
                 } catch (error) {

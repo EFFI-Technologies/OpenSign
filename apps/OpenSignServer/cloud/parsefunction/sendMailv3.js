@@ -44,7 +44,9 @@ async function sendMailProvider(req, plan, monthchange) {
             });
           } else {
             const path = new URL(req.params.url)?.pathname;
-            const addr = process.env.CLOUD_PORT ? `http://localhost:${process.env.CLOUD_PORT}` : 'http://localhost';
+            const addr = process.env.CLOUD_PORT
+              ? `http://localhost:${process.env.CLOUD_PORT}`
+              : 'http://localhost';
             const localurl = addr + path;
             http.get(localurl, async function (response) {
               response.pipe(Pdf);
@@ -93,7 +95,7 @@ async function sendMailProvider(req, plan, monthchange) {
           attachment = [file];
         }
         const from = req.params.from || '';
-        const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+        const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
         const messageParams = {
           from: from + ' <' + mailsender + '>',
@@ -151,7 +153,7 @@ async function sendMailProvider(req, plan, monthchange) {
       }
     } else {
       const from = req.params.from || '';
-      const mailsender = '';// smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const mailsender = ''; // smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
       const messageParams = {
         from: mailsender ? from + ' <' + mailsender + '>' : from,
@@ -181,7 +183,9 @@ async function sendMailProvider(req, plan, monthchange) {
             return { status: 'success' };
           }
         } else if (process.env.SENDGRID_API_KEY) {
+          console.log('messageParams', messageParams);
           const res = await sendgrid.send(messageParams);
+          console.log('sendgrid: result:', res.status);
           if (res.status == 202 || res[0]?.statusCode === 202) return { status: 'success' };
           else return { status: 'error' };
         } else {
