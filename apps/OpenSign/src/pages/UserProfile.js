@@ -346,7 +346,7 @@ function UserProfile() {
         <TourContentWithBtn
           message={t("tour-mssg.public-template")}
           isChecked={handleDontShow}
-          video="https://www.youtube.com/embed/_wB4UA7Jz5Q?si=I40CI3nVUWQzf42Y"
+          video="https://www.youtube.com"
         />
       ),
       position: "top",
@@ -422,7 +422,7 @@ function UserProfile() {
             className="md:!min-w-[650px]"
             onRequestClose={closeTour}
             steps={tourConfig}
-            isOpen={!isProfileTour}
+            isOpen={false}
             rounded={5}
             closeWithMask={false}
           />
