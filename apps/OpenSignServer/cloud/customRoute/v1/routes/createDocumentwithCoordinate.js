@@ -67,7 +67,7 @@ export default async function createDocumentwithCoordinate(request, response) {
   const TimeToCompleteDays = request.body.timeToCompleteDays || 15;
   const IsEnableOTP = request.body?.enableOTP === true ? true : false;
   const isTourEnabled = request.body?.enableTour || false;
-  const returnUrl = request.body?.returnUrl;  
+  const returnUrl = request.body?.returnUrl;
   // console.log('fileData ', fileData);
   const protocol = customAPIurl();
   const baseUrl = new URL(process.env.PUBLIC_URL);
@@ -157,6 +157,11 @@ export default async function createDocumentwithCoordinate(request, response) {
             };
             const object = new Parse.Object('contracts_Document');
             object.set('Name', name);
+
+            const ip = request?.headers?.['x-real-ip'] || request?.headers?.['x-ip-address'] || '';
+            if (ip) {
+              object.set('OriginIp', ip);
+            }
 
             if (note) {
               object.set('Note', note);
@@ -312,7 +317,8 @@ export default async function createDocumentwithCoordinate(request, response) {
               }
               for (let i = 0; i < contactMail.length; i++) {
                 try {
-                  const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+                  const imgPng =
+                    'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
                   let url = `${cloudServerUrl}/functions/sendmailv3/`;
                   const headers = {
                     'Content-Type': 'application/json',
@@ -392,7 +398,7 @@ export default async function createDocumentwithCoordinate(request, response) {
                     mailProvider: parseExtUser?.active_mail_adapter || '',
                   };
 
-                  console.log("email params", params);
+                  console.log('email params', params);
 
                   await axios.post(url, params, { headers: headers });
                 } catch (error) {
@@ -420,9 +426,7 @@ export default async function createDocumentwithCoordinate(request, response) {
             }
             const resSubcription = await subscriptionCls.save(null, { useMasterKey: true });
             // console.log('resSubcription ', resSubcription);
-            let { sessionToken } = await generateSessionTokenByUsername(
-              parseUser.userId.username
-            );
+            let { sessionToken } = await generateSessionTokenByUsername(parseUser.userId.username);
             const url = `${process.env.PUBLIC_URL}/login/sender/${sessionToken}?goto=/placeHolderSign/${res.id}&returnUrl=${returnUrl}`;
             return response.json({
               objectId: res.id,

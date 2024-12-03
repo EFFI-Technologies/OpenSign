@@ -153,6 +153,12 @@ export async function createDocumentWithTemplate(request, response) {
                   object.set('Description', template.Description);
                 }
                 object.set('IsSendMail', send_email);
+
+                const ip =
+                  request?.headers?.['x-real-ip'] || request?.headers?.['x-ip-address'] || '';
+                if (ip) {
+                  object.set('OriginIp', ip);
+                }
                 if (sendInOrder) {
                   object.set('SendinOrder', sendInOrder);
                 } else if (template?.SendinOrder && template?.SendinOrder) {

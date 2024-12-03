@@ -185,7 +185,7 @@ async function sendMailProvider(req, plan, monthchange) {
         } else if (process.env.SENDGRID_API_KEY) {
           console.log('messageParams', messageParams);
           const res = await sendgrid.send(messageParams);
-          console.log('sendgrid: result:', res.status);
+          console.log('sendgrid: result:', res);
           if (res.status == 202 || res[0]?.statusCode === 202) return { status: 'success' };
           else return { status: 'error' };
         } else {
