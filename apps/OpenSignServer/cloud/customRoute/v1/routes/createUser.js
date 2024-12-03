@@ -19,17 +19,17 @@ async function saveUser(userDetails) {
 }
 
 export default async function createUser(request, response) {
-    const reqToken = request.headers['x-api-token'];
-    if (!reqToken) {
-      return response.status(400).json({ error: 'Please Provide API Token' });
-    }
-    const tokenQuery = new Parse.Query('appToken');
-    tokenQuery.equalTo('token', reqToken);
-    tokenQuery.include('userId');
-    const token = await tokenQuery.first({ useMasterKey: true });
-    if(!token) {
-        return response.status(405).json({ error: 'Invalid API Token!' });
-    }
+  const reqToken = request.headers['x-api-token'];
+  if (!reqToken) {
+    return response.status(400).json({ error: 'Please Provide API Token' });
+  }
+  const tokenQuery = new Parse.Query('appToken');
+  tokenQuery.equalTo('token', reqToken);
+  tokenQuery.include('userId');
+  const token = await tokenQuery.first({ useMasterKey: true });
+  if (!token) {
+    return response.status(405).json({ error: 'Invalid API Token!' });
+  }
   const userDetails = request.body;
   const user = await saveUser(userDetails);
   const currentUser = token.get('userId');
@@ -63,9 +63,8 @@ export default async function createUser(request, response) {
     });
     const extUser = await extQuery.first({ useMasterKey: true });
     if (extUser) {
-        return response.status(400).json({ error: 'User already exist' });
+      return response.status(400).json({ error: 'User already exist' });
     } else {
-      
       const extCls = Parse.Object.extend(extClass + '_Users');
       const newObj = new extCls();
       newObj.set('UserId', {
@@ -78,8 +77,9 @@ export default async function createUser(request, response) {
       newObj.set('Name', userDetails.name);
       newObj.set('TenantId', contractsUser.get('TenantId'));
       newObj.set('OrganizationId', organizationId);
-      newObj.set('TeamIds', teamIds); 
+      newObj.set('TeamIds', teamIds);
       newObj.set('Webhook', userDetails.webhookUrl);
+      newObj.set('Company', contractsUser.get('Company'));
 
       await newObj.save(null, { useMasterKey: true });
       const api = await generateApiTokenForUser(userDetails.email);
@@ -91,37 +91,37 @@ export default async function createUser(request, response) {
 }
 
 async function generateApiTokenForUser(username) {
-    try {
-      const userQuery = new Parse.Query('_User');
-      userQuery.equalTo('username', username);
-      const user = await userQuery.first({ useMasterKey: true });
-  
-      if (user) {
-        const userId = user.id;
-  
-        // Check if a token already exists for the user
-        const tokenQuery = new Parse.Query('appToken');
-        tokenQuery.equalTo('userId', { __type: 'Pointer', className: '_User', objectId: userId });
-        const token = await tokenQuery.first({ useMasterKey: true });
-  
-        if (token) {
-          return token;
-        } else {
-          // Generate a new API token
-          console.log('Generating New API Token');
-          const AppToken = Parse.Object.extend('appToken');
-          const newTokenObj = new AppToken();
-          const newToken = generateApiKey({ method: 'base62', prefix: 'effisign' });
-          newTokenObj.set('token', newToken);
-          newTokenObj.set('userId', { __type: 'Pointer', className: '_User', objectId: userId });
-          const newRes = await newTokenObj.save(null, { useMasterKey: true });
-          return newRes;
-        }
+  try {
+    const userQuery = new Parse.Query('_User');
+    userQuery.equalTo('username', username);
+    const user = await userQuery.first({ useMasterKey: true });
+
+    if (user) {
+      const userId = user.id;
+
+      // Check if a token already exists for the user
+      const tokenQuery = new Parse.Query('appToken');
+      tokenQuery.equalTo('userId', { __type: 'Pointer', className: '_User', objectId: userId });
+      const token = await tokenQuery.first({ useMasterKey: true });
+
+      if (token) {
+        return token;
       } else {
-        return 'User not found!';
+        // Generate a new API token
+        console.log('Generating New API Token');
+        const AppToken = Parse.Object.extend('appToken');
+        const newTokenObj = new AppToken();
+        const newToken = generateApiKey({ method: 'base62', prefix: 'effisign' });
+        newTokenObj.set('token', newToken);
+        newTokenObj.set('userId', { __type: 'Pointer', className: '_User', objectId: userId });
+        const newRes = await newTokenObj.save(null, { useMasterKey: true });
+        return newRes;
       }
-    } catch (err) {
-      console.error('Error generating API token:', err);
-      throw err;
+    } else {
+      return 'User not found!';
     }
+  } catch (err) {
+    console.error('Error generating API token:', err);
+    throw err;
   }
+}
