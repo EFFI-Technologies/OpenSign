@@ -156,6 +156,8 @@ export async function createDocumentWithTemplate(request, response) {
 
                 const ip =
                   request?.headers?.['x-ip-address'] || request?.headers?.['x-real-ip'] || '';
+                console.log('x-ip-address', request?.headers?.['x-ip-address']);
+                console.log('x-real-ip', request?.headers?.['x-real-ip']);
                 if (ip) {
                   object.set('OriginIp', ip);
                 }
