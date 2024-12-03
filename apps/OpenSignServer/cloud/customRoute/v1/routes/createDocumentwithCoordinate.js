@@ -158,7 +158,7 @@ export default async function createDocumentwithCoordinate(request, response) {
             const object = new Parse.Object('contracts_Document');
             object.set('Name', name);
 
-            const ip = request?.headers?.['x-real-ip'] || request?.headers?.['x-ip-address'] || '';
+            const ip = request?.headers?.['x-ip-address'] || request?.headers?.['x-real-ip'] || '';
             if (ip) {
               object.set('OriginIp', ip);
             }

@@ -155,7 +155,7 @@ export async function createDocumentWithTemplate(request, response) {
                 object.set('IsSendMail', send_email);
 
                 const ip =
-                  request?.headers?.['x-real-ip'] || request?.headers?.['x-ip-address'] || '';
+                  request?.headers?.['x-ip-address'] || request?.headers?.['x-real-ip'] || '';
                 if (ip) {
                   object.set('OriginIp', ip);
                 }
