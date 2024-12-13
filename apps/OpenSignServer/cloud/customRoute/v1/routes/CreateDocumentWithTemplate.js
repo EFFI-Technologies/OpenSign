@@ -75,6 +75,7 @@ export async function createDocumentWithTemplate(request, response) {
   const email_subject = request.body.email_subject;
   const email_body = request.body.email_body;
   const sendInOrder = request.body.sendInOrder || true;
+  const autoAdjust = request.body.autoAdjust;
   const TimeToCompleteDays = request.body.timeToCompleteDays || 15;
 
   try {
@@ -169,6 +170,12 @@ export async function createDocumentWithTemplate(request, response) {
                 let templateSigner = template?.Signers ? template?.Signers : [];
                 let contact = [];
                 if (signers && signers.length > 0) {
+                  if (autoAdjust) {
+                    const emptyItems = signers.filter(e => !e.email).map(e => e.role);
+                    template.Placeholders = template?.Placeholders.filter(
+                      ts => !emptyItems.includes(ts.Role)
+                    );
+                  }
                   let parseSigners = [...signers];
                   let createContactUrl = protocol + '/v1/createcontact';
 
