@@ -153,7 +153,7 @@ const sendMailToAllSigners = async docId => {
               //encode this url value `${Doc.objectId}/${signerMail[i].Email}/${objectId}` to base64 using `btoa` function
               const encodeBase64 = btoa(`${Doc?.objectId}/${signerMail[i].Email}/${objectId}`);
               let signPdf = `${hostPublicUrl}/login/${encodeBase64}`;
-              const effiSignUrl = 'https://esign.effi.com.au';
+              const effiSignUrl = 'mailto:support@effi.com.au';
               const orgName = Doc?.ExtUserPtr?.Company || '';
               const themeBGcolor = '#47a3ad';
               const senderName = `${Doc?.ExtUserPtr.Name}`;

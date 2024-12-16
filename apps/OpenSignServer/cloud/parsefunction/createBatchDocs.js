@@ -71,7 +71,7 @@ async function sendMail(document) {
         encodeBase64 = btoa(`${document.objectId}/${signerMail[i].email}`);
       }
       let signPdf = `${hostUrl}/login/${encodeBase64}`;
-      const effiSignUrl = 'https://effi.com.au/contact/';
+      const effiSignUrl = 'mailto:support@effi.com.au';
       const orgName = document.ExtUserPtr.Company ? document.ExtUserPtr.Company : '';
       const themeBGcolor = '#47a3ad';
       let params = {

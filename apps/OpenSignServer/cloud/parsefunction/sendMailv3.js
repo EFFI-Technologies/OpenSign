@@ -59,7 +59,7 @@ async function sendMailProvider(req, plan, monthchange) {
       const ress = await writeToLocalDisk();
       if (ress) {
         function readTolocal() {
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             setTimeout(() => {
               let PdfBuffer = fs.readFileSync(Pdf.path);
               resolve(PdfBuffer);
@@ -97,17 +97,29 @@ async function sendMailProvider(req, plan, monthchange) {
         const from = req.params.from || '';
         const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
-        const messageParams = {
-          from: from + ' <' + mailsender + '>',
+        let messageParamsWithAttachment = {
+          from,
           to: req.params.recipient,
           subject: req.params.subject,
           text: req.params.text || 'mail',
           html: req.params.html || '',
-          attachments: smtpenable ? attachment : undefined,
-          attachment: smtpenable ? undefined : attachment,
         };
+
+        if (process.env.SENDGRID_API_KEY) {
+          const sendGridFormat = attachment.map(at => ({
+            content: at.data.toString('base64'),
+            filename: at.filename,
+            disposition: 'attachment',
+          }));
+          messageParamsWithAttachment.attachments = sendGridFormat;
+          messageParamsWithAttachment.to = messageParamsWithAttachment.to.split(',');
+        } else {
+          messageParamsWithAttachment.attachments = smtpenable ? attachment : undefined;
+          messageParamsWithAttachment.attachment = smtpenable ? undefined : attachment;
+        }
+
         if (transporterSMTP) {
-          const res = await transporterSMTP.sendMail(messageParams);
+          const res = await transporterSMTP.sendMail(messageParamsWithAttachment);
           console.log('smtp transporter res: ', res?.response);
           if (!res.err) {
             if (req.params?.extUserId) {
@@ -124,7 +136,10 @@ async function sendMailProvider(req, plan, monthchange) {
           }
         } else {
           if (mailgunApiKey) {
-            const res = await mailgunClient.messages.create(mailgunDomain, messageParams);
+            const res = await mailgunClient.messages.create(
+              mailgunDomain,
+              messageParamsWithAttachment
+            );
             console.log('mailgun res: ', res?.status);
             if (res.status === 200) {
               if (req.params?.extUserId) {
@@ -139,6 +154,12 @@ async function sendMailProvider(req, plan, monthchange) {
               }
               return { status: 'success' };
             }
+          } else if (process.env.SENDGRID_API_KEY) {
+            console.log('messageParams', messageParamsWithAttachment);
+            const res = await sendgrid.send(messageParamsWithAttachment);
+            console.log('sendgrid: result:', res);
+            if (res.status == 202 || res[0]?.statusCode === 202) return { status: 'success' };
+            else return { status: 'error' };
           } else {
             if (fs.existsSync(certificatePath)) {
               try {

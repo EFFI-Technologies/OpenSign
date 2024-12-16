@@ -60,7 +60,7 @@ export default async function resendMail(request, response) {
             //encode this url value `${response.id}/${receiverMail}/${objectId}` to base64 using `btoa` function
             const encodeBase64 = btoa(`${_resDoc.objectId}/${receiverMail}/${objectId}`);
             let signPdf = `${hostUrl}/login/${encodeBase64}`;
-            const effiSignUrl = 'https://effi.com.au/contact/';
+            const effiSignUrl = 'mailto:support@effi.com.au';
             const orgName = _resDoc.ExtUserPtr.Company ? _resDoc.ExtUserPtr.Company : '';
             const newDate = new Date(_resDoc.ExpiryDate.iso);
             newDate.setDate(newDate.getDate() + 15);

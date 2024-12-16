@@ -300,7 +300,7 @@ export async function createDocumentWithTemplate(request, response) {
                       //encode this url value `${res.id}/${contactMail[i].email}/${objectId}` to base64 using `btoa` function
                       const encodeBase64 = btoa(`${res.id}/${contactMail[i].email}/${objectId}`);
                       let signPdf = `${hostUrl}/login/${encodeBase64}`;
-                      const effiSignUrl = 'https://effi.com.au/contact/';
+                      const effiSignUrl = 'mailto:support@effi.com.au';
                       const orgName = template.ExtUserPtr.Company
                         ? template.ExtUserPtr.Company
                         : '';

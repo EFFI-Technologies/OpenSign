@@ -112,25 +112,34 @@ async function sendCompletedMail(obj) {
   //  doc?.Signers?.length > 0 ? doc?.Signers?.map(x => x?.Email)?.join(',') : sender.Email;
 
   let signersMail;
+  let signersEmails;
   if (doc?.Signers?.length > 0) {
     const isOwnerExistsinSigners = doc?.Signers?.find(x => x.Email === sender.Email);
     signersMail = isOwnerExistsinSigners
       ? doc?.Signers?.map(x => x?.Email)?.join(',')
       : [...doc?.Signers?.map(x => x?.Email), sender.Email]?.join(',');
+    signersEmails = signersMail
+      .split(',')
+      .filter(e => e !== sender.Email)
+      .map(e => `<li>${e}</li>`)
+      .join('');
   } else {
     signersMail = sender.Email;
+    signersEmails = `<li>${signersMail}</li>`;
   }
-  const recipient = signersMail;
 
+  const recipient = signersMail;
   let subject = `Document "${pdfName}" has been signed by all parties`;
   let body =
     "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body>  <div style='background-color:#f5f5f5;padding:20px'>    <div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'> <div><img src=" +
     mailLogo +
-    "  height='50' style='padding:20px'/> </div><div style='padding:2px;font-family:system-ui; background-color: #47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',> Document signed successfully</p></div><div><p style='padding:20px;font-family:system-ui;font-size:14px'>All parties have successfully signed the document " +
+    "  height='50' style='padding:20px'/> </div><div style='padding:2px;font-family:system-ui; background-color: #47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',> Document signed successfully</p></div><div style='padding: 10px 0;'><p style='padding:20px;font-family:system-ui;font-size:14px'>All parties have successfully signed the document " +
     `<b>"${pdfName}"</b>` +
-    '. Kindly download the document from the attachment.</p></div> </div><div><p>This is an automated email from EffiSign. For any queries regarding this email, please contact the sender ' +
+    '. Kindly download the document from the attachment.</p><p style="padding: 0 20px;font-family: system-ui;font-size: 14px;""><b>Signers:</b></p> <p><ul>' +
+    signersEmails +
+    '</ul></p></div> </div><div><p>This is an automated email from EffiSign. For any queries regarding this email, please contact the sender ' +
     sender.Email +
-    ' directly. If you think this email is inappropriate or spam, you may file a complaint with EffiSign <a href=esign.effi.com.au target=_blank>here</a>.</p></div></div></body></html>';
+    ' directly. If you think this email is inappropriate or spam, you may file a complaint with EffiSign <a href=mailto:support@effi.com.au target=_blank>here</a>.</p></div></div></body></html>';
 
   if (obj?.isCustomMail) {
     try {
@@ -179,7 +188,7 @@ async function sendCompletedMail(obj) {
   const params = {
     extUserId: sender.objectId,
     url: url,
-    from: 'EffiSign',
+    from: sender.Email,
     recipient: recipient,
     subject: subject,
     pdfName: pdfName,
@@ -296,7 +305,7 @@ async function sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider
     },
   });
   // used in API only
-  if (doc.IsSendMail === false) {
+  if (doc.SendMail === false) {
     console.log("don't send mail");
   } else {
     sendCompletedMail({ isCustomMail, doc, mailProvider });
