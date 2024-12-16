@@ -33,9 +33,10 @@ async function sendMailProvider(req, plan, monthchange) {
       }
     }
     if (req.params.url) {
+      console.log('req.params.url', req.params.url);
       let Pdf = fs.createWriteStream('test.pdf');
       const writeToLocalDisk = () => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           const isSecure = new URL(req.params.url)?.protocol === 'https:';
           if (useLocal !== 'true' || isSecure) {
             https.get(req.params.url, async function (response) {
@@ -155,9 +156,9 @@ async function sendMailProvider(req, plan, monthchange) {
               return { status: 'success' };
             }
           } else if (process.env.SENDGRID_API_KEY) {
-            console.log('messageParams', messageParamsWithAttachment);
+            console.log('messageParamsWithAttachment', messageParamsWithAttachment);
             const res = await sendgrid.send(messageParamsWithAttachment);
-            console.log('sendgrid: result:', res);
+            console.log('sendgrid: messageParamsWithAttachment: result:', res);
             if (res.status == 202 || res[0]?.statusCode === 202) return { status: 'success' };
             else return { status: 'error' };
           } else {
