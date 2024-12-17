@@ -468,7 +468,6 @@ async function PDF(req) {
 
       // `uploadFile` is used to upload pdf to aws s3 and get it's url
       const data = await uploadFile(name, filePath, adapterConfig);
-      console.log('data.imageUrl', data.imageUrl);
       if (data && data.imageUrl) {
         // `axios` is used to update signed pdf url in contracts_Document classes for given DocId
         const updatedDoc = await updateDoc(
