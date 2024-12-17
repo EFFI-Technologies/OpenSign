@@ -270,6 +270,7 @@ async function sendDoctoWebhook(doc, Url, event, signUser, certificateUrl) {
 
 // `sendMailsaveCertifcate` is used send completion mail and update complete status of document
 async function sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider, adapterConfig) {
+  console.log("doc: sendMailsaveCertifcate", doc);
   const certificate = await GenerateCertificate(doc);
   const certificatePdf = await PDFDocument.load(certificate);
   let passphrase = process.env.PASS_PHRASE;
@@ -308,6 +309,7 @@ async function sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider
   if (doc.SendMail === false) {
     console.log("don't send mail");
   } else {
+    console.log("doc: before sendCompletedMail", doc);
     sendCompletedMail({ isCustomMail, doc, mailProvider });
   }
   saveFileUsage(CertificateBuffer.length, file.imageUrl, doc?.CreatedBy?.objectId);
