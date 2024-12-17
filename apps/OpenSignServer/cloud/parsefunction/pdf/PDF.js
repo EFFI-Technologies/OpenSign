@@ -32,6 +32,8 @@ async function uploadFile(pdfName, filepath, adapter) {
         secretAccessKey: adapter?.secretAccessKey,
         baseUrl: adapter?.baseUrl,
       };
+
+      console.log("adapterConfig",adapterConfig);
       // `uploadFileToS3` is used to save document in user's file storage
       fileUrl = await uploadFileToS3(filedata, pdfName, 'application/pdf', adapterConfig);
     } else {

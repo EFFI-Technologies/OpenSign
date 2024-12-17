@@ -28,6 +28,7 @@ async function uploadFileToS3(buffer, fileName, mimeType, adapter) {
 
     // Generate a presigned URL for the uploaded file
     const presignedUrl = await getSignedUrl(client, getCommand, { expiresIn: 900 }); // URL expiration time in seconds (e.g., 15 min)
+    console.log('presignedUrl', presignedUrl, client, getCommand);
     return presignedUrl;
   } catch (error) {
     console.error('Error uploading file to aws:', error?.message);
