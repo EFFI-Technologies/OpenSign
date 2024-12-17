@@ -40,7 +40,7 @@ async function sendMailProvider(req, plan, monthchange) {
           const isSecure = new URL(req.params.url)?.protocol === 'https:';
           if (useLocal !== 'true' || isSecure) {
            // const url = req.params.url.replace('http://', 'https://'); // didn't find the src to see why it's http
-            https.get(url, async function (response) {
+            https.get(req.params.url, async function (response) {
               response.pipe(Pdf);
               response.on('end', () => resolve('success'));
             });

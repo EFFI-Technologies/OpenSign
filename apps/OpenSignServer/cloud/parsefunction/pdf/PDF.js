@@ -20,6 +20,7 @@ function removeSpecialCharacters(str) {
 async function uploadFile(pdfName, filepath, adapter) {
   try {
     const filedata = fs.readFileSync(filepath);
+    console.log('adapter?.bucketName', adapter?.bucketName);
     let fileUrl;
     if (adapter?.bucketName) {
       const adapterConfig = {
@@ -33,7 +34,7 @@ async function uploadFile(pdfName, filepath, adapter) {
         baseUrl: adapter?.baseUrl,
       };
 
-      console.log("adapterConfig",adapterConfig);
+      console.log('adapterConfig', adapterConfig);
       // `uploadFileToS3` is used to save document in user's file storage
       fileUrl = await uploadFileToS3(filedata, pdfName, 'application/pdf', adapterConfig);
     } else {
@@ -272,7 +273,6 @@ async function sendDoctoWebhook(doc, Url, event, signUser, certificateUrl) {
 
 // `sendMailsaveCertifcate` is used send completion mail and update complete status of document
 async function sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider, adapterConfig) {
-  console.log("doc: sendMailsaveCertifcate", doc);
   const certificate = await GenerateCertificate(doc);
   const certificatePdf = await PDFDocument.load(certificate);
   let passphrase = process.env.PASS_PHRASE;
@@ -311,7 +311,6 @@ async function sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider
   if (doc.SendMail === false) {
     console.log("don't send mail");
   } else {
-    console.log("doc: before sendCompletedMail", doc);
     sendCompletedMail({ isCustomMail, doc, mailProvider });
   }
   saveFileUsage(CertificateBuffer.length, file.imageUrl, doc?.CreatedBy?.objectId);
@@ -416,6 +415,7 @@ async function PDF(req) {
       const name = `signed_${docName}_${randomNumber}.pdf`;
       const filePath = `./exports/${name}`;
       let pdfSize = PdfBuffer.length;
+      debugger;
       if (isCompleted) {
         const signersName = _resDoc.Signers?.map(x => x.Name + ' <' + x.Email + '>');
         if (signersName && signersName.length > 0) {
@@ -461,7 +461,7 @@ async function PDF(req) {
 
       // `uploadFile` is used to upload pdf to aws s3 and get it's url
       const data = await uploadFile(name, filePath, adapterConfig);
-
+      console.log('data.imageUrl', data.imageUrl);
       if (data && data.imageUrl) {
         // `axios` is used to update signed pdf url in contracts_Document classes for given DocId
         const updatedDoc = await updateDoc(
