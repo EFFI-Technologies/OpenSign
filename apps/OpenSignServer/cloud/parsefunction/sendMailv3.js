@@ -35,10 +35,11 @@ async function sendMailProvider(req, plan, monthchange) {
     if (req.params.url) {
       let Pdf = fs.createWriteStream('test.pdf');
       const writeToLocalDisk = () => {
+        console.log("req.params.url",req.params.url);
         return new Promise(resolve => {
           const isSecure = new URL(req.params.url)?.protocol === 'https:';
           if (useLocal !== 'true' || isSecure) {
-            const url = req.params.url.replace('http://', 'https://'); // didn't find the src to see why it's http
+           // const url = req.params.url.replace('http://', 'https://'); // didn't find the src to see why it's http
             https.get(url, async function (response) {
               response.pipe(Pdf);
               response.on('end', () => resolve('success'));
