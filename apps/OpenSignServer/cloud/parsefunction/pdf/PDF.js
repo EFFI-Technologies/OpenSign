@@ -20,7 +20,6 @@ function removeSpecialCharacters(str) {
 async function uploadFile(pdfName, filepath, adapter) {
   try {
     const filedata = fs.readFileSync(filepath);
-    console.log('adapter?.bucketName', adapter?.bucketName);
     let fileUrl;
     if (adapter?.bucketName) {
       const adapterConfig = {
@@ -34,7 +33,6 @@ async function uploadFile(pdfName, filepath, adapter) {
         baseUrl: adapter?.baseUrl,
       };
 
-      console.log('adapterConfig', adapterConfig);
       // `uploadFileToS3` is used to save document in user's file storage
       fileUrl = await uploadFileToS3(filedata, pdfName, 'application/pdf', adapterConfig);
     } else {
@@ -104,7 +102,16 @@ async function updateDoc(docId, url, userId, ipAddress, data, className, sign) {
 
 // `sendCompletedMail` is used to send copy of completed document mail
 async function sendCompletedMail(obj) {
-  const url = obj.doc?.SignedUrl;
+  let url = obj.doc?.SignedUrl;
+  const Document = new Parse.Query('contracts_Document');
+  Document.equalTo('objectId', obj.doc.objectId);
+  const resx = await Document.first({ useMasterKey: true });
+  if (resx) {
+    url = resx.get('SignedUrl');
+  }
+
+  console.log("Urls", obj.doc?.SignedUrl, url);
+
   const doc = obj.doc;
   const sender = obj.doc.ExtUserPtr;
   const pdfName = doc.Name;
