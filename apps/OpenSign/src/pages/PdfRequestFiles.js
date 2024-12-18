@@ -384,6 +384,24 @@ function PdfRequestFiles(props) {
       return;
     }
   };
+
+  const sendViewEmail = async (params) => {
+    const url = `${localStorage.getItem("baseUrl")}functions/sendmailv3`;
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Parse-Application-Id": localStorage.getItem("parseAppId"),
+      sessionToken: localStorage.getItem("accesstoken")
+    };
+    try {
+      const res = await axios.post(url, params, { headers: headers });
+      if (res?.data?.result?.status !== "success") {
+        console.log("err in sendmail", res?.data?.result);
+      }
+    } catch (err) {
+      console.log("err in sendmail", err);
+    }
+  };
+
   //function for get document details for perticular signer with signer'object id
   const getDocumentDetails = async (docId, isNextUser) => {
     try {
@@ -516,6 +534,41 @@ function PdfRequestFiles(props) {
               }
             };
 
+            const openSignUrl = "https://effi.com.au/contact";
+            const imgPng =
+              "https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png";
+            const themeBGcolor = themeColor;
+            let senderEmail = obj.ExtUserPtr?.Email;
+            const pdfName = documentData?.[0].Name;
+            const clientEmail =
+              documentData?.[0].Signers?.find((x) => x.objectId === currUserId)
+                ?.Email || jsonSender?.email;
+            let currentuserName =
+              documentData?.[0].Signers?.find((x) => x.objectId === currUserId)
+                ?.Name || jsonSender?.name;
+            let emailParams = {
+              // mailProvider: activeMailAdapter,
+              extUserId: obj.ExtUserPtr.objectId,
+              pdfName: pdfName,
+              recipient: senderEmail,
+              subject: `${currentuserName} has viewed the doc - ${pdfName}`,
+              from: clientEmail,
+              html:
+                "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body>  <div style='background-color:#f5f5f5;padding:20px'>    <div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'> <div><img src=" +
+                imgPng +
+                "  height='50' style='padding:20px,width:170px,height:40px'/> </div><div style='padding:2px;font-family:system-ui; background-color:" +
+                themeBGcolor +
+                ";'></div><div><p style='padding:20px;font-family:system-ui;font-size:14px'><strong>" +
+                pdfName +
+                " </strong>is viewed by " +
+                currentuserName +
+                ".</p></div> </div><div></div><div><p>This is an automated email from EffiSign. For any queries regarding this email, please contact the sender " +
+                clientEmail +
+                " directly. If you think this email is inappropriate or spam, you may file a complaint with EffiSign  <a href= " +
+                openSignUrl +
+                " target=_blank>here</a> </p></div></div></body></html>"
+            };
+            await sendViewEmail(emailParams);
             try {
               await axios.post(
                 `${localStorage.getItem("baseUrl")}functions/callwebhook`,
@@ -1009,8 +1062,7 @@ function PdfRequestFiles(props) {
                         let signPdf = props?.templateId
                           ? `${hostPublicUrl}/login/${encodeBase64}`
                           : `${hostUrl}/login/${encodeBase64}`;
-                        const openSignUrl =
-                          "https://effi.com.au/contact";
+                        const openSignUrl = "https://effi.com.au/contact";
                         const orgName = pdfDetails[0]?.ExtUserPtr.Company
                           ? pdfDetails[0].ExtUserPtr.Company
                           : "";
