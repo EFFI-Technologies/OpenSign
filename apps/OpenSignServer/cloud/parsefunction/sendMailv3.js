@@ -75,9 +75,9 @@ async function sendMailProvider(req, plan, monthchange) {
           data: smtpenable ? undefined : PdfBuffer,
         };
 
-        let attachment;
+        let attachment = [file];
         const certificatePath = './exports/certificate.pdf';
-        if (fs.existsSync(certificatePath)) {
+        if (fs.existsSync(certificatePath) && !req.params.excludeCertificate) {
           try {
             //  `certificateBuffer` used to create buffer from pdf file
             const certificateBuffer = fs.readFileSync(certificatePath);
@@ -86,16 +86,12 @@ async function sendMailProvider(req, plan, monthchange) {
               content: smtpenable ? certificateBuffer : undefined, //fs.readFileSync('./exports/exported_file_1223.pdf'),
               data: smtpenable ? undefined : certificateBuffer,
             };
-            attachment = [file, certificate];
+            attachment.push(certificate);
           } catch (err) {
-            attachment = [file];
             console.log('Err in read certificate sendmailv3', err);
           }
-        } else {
-          attachment = [file];
         }
         const from = req.params.from || '';
-        const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 
         let messageParamsWithAttachment = {
           from,
@@ -186,7 +182,6 @@ async function sendMailProvider(req, plan, monthchange) {
 
       if (transporterSMTP) {
         const res = await transporterSMTP.sendMail(messageParams);
-        console.log('smtp transporter res: ', res?.response);
         if (!res.err) {
           if (req.params?.extUserId) {
             await updateMailCount(req.params.extUserId, plan, monthchange);
@@ -264,20 +259,17 @@ async function sendcustomsmtp(extRes, req) {
       let PdfBuffer = await readTolocal();
       const pdfName = req.params.pdfName ? `${req.params.pdfName}.pdf` : 'exported.pdf';
       const file = { filename: pdfName, content: PdfBuffer };
-      let attachment;
+      let attachment = [file];
       const certificatePath = './exports/certificate.pdf';
-      if (fs.existsSync(certificatePath)) {
+      if (fs.existsSync(certificatePath) && !req.params.excludeCertificate) {
         try {
           //  `certificateBuffer` used to create buffer from pdf file
           const certificateBuffer = fs.readFileSync(certificatePath);
           const certificate = { filename: 'certificate.pdf', content: certificateBuffer };
-          attachment = [file, certificate];
+          attachment.push(certificate);
         } catch (err) {
-          attachment = [file];
           console.log('Err in read certificate sendmailv3', err);
         }
-      } else {
-        attachment = [file];
       }
       const from = req.params.from || '';
       const mailsender = extRes.SmtpConfig.username;

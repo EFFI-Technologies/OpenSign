@@ -110,16 +110,12 @@ async function sendCompletedMail(obj) {
     url = resx.get('SignedUrl');
   }
 
-  console.log("Urls", obj.doc?.SignedUrl, url);
-
   const doc = obj.doc;
   const sender = obj.doc.ExtUserPtr;
   const pdfName = doc.Name;
 
   const mailLogo =
     'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
-  //const recipient =
-  //  doc?.Signers?.length > 0 ? doc?.Signers?.map(x => x?.Email)?.join(',') : sender.Email;
 
   let signersMail;
   let signersEmails;
@@ -145,7 +141,7 @@ async function sendCompletedMail(obj) {
     mailLogo +
     "  height='50' style='padding:20px'/> </div><div style='padding:2px;font-family:system-ui; background-color: #47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',> Document signed successfully</p></div><div style='padding: 10px 0;'><p style='padding:20px;font-family:system-ui;font-size:14px'>Everyone has successfully signed the document " +
     `<b>"${pdfName}"</b>` +
-    '. Kindly download the document from the attachment.</p><p style="padding: 0 20px;font-family: system-ui;font-size: 14px;""><b>Signers:</b></p> <p><ul>' +
+    '. Kindly download the documents from the attachment.</p><p style="padding: 0 20px;font-family: system-ui;font-size: 14px;""><b>Signers:</b></p> <p><ul>' +
     signersEmails +
     '</ul></p></div> </div><div><p>This is an automated email from EffiSign. For any queries regarding this email, please contact the sender ' +
     sender.Email +
@@ -206,6 +202,57 @@ async function sendCompletedMail(obj) {
     mailProvider: obj.mailProvider,
   };
   const res = await axios.post(serverUrl + '/functions/sendmailv3', params, {
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Parse-Application-Id': APPID,
+      'X-Parse-Master-Key': masterKEY,
+    },
+  });
+}
+
+// `sendSignedMail` is used to send copy of signed document mail
+async function sendSignedMail(doc, signUser) {
+  let url = doc?.SignedUrl;
+  const Document = new Parse.Query('contracts_Document');
+  Document.equalTo('objectId', doc.objectId);
+  const resx = await Document.first({ useMasterKey: true });
+  if (resx) {
+    url = resx.get('SignedUrl');
+  }
+
+  const sender = doc.ExtUserPtr;
+  const pdfName = doc.Name;
+
+  const mailLogo =
+    'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+
+  let recipient = signUser.Email;
+  if (recipient !== sender.Email) {
+    recipient += `,${sender.Email}`;
+  }
+  let subject = `Document "${pdfName}" has been signed by ${signUser.Name}`;
+  let body =
+    "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body>  <div style='background-color:#f5f5f5;padding:20px'>    <div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'> <div><img src=" +
+    mailLogo +
+    "  height='50' style='padding:20px'/> </div><div style='padding:2px;font-family:system-ui; background-color: #47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',> Document signed successfully</p></div><div style='padding: 10px 0;'><p style='padding:20px;font-family:system-ui;font-size:14px'>" +
+    signUser.Name +
+    ' has successfully signed the document ' +
+    `<b>"${pdfName}"</b>` +
+    '. Kindly download the document from the attachment.</p></div> </div><div><p>This is an automated email from EffiSign. For any queries regarding this email, please contact the sender ' +
+    sender.Email +
+    ' directly. If you think this email is inappropriate or spam, you may file a complaint with EffiSign <a href=mailto:support@effi.com.au target=_blank>here</a>.</p></div></div></body></html>';
+
+  const params = {
+    extUserId: sender.objectId,
+    url: url,
+    from: sender.Email,
+    recipient: recipient,
+    subject: subject,
+    pdfName: pdfName,
+    html: body,
+    excludeCertificate: true,
+  };
+  await axios.post(serverUrl + '/functions/sendmailv3', params, {
     headers: {
       'Content-Type': 'application/json',
       'X-Parse-Application-Id': APPID,
@@ -422,7 +469,6 @@ async function PDF(req) {
       const name = `signed_${docName}_${randomNumber}.pdf`;
       const filePath = `./exports/${name}`;
       let pdfSize = PdfBuffer.length;
-      debugger;
       if (isCompleted) {
         const signersName = _resDoc.Signers?.map(x => x.Name + ' <' + x.Email + '>');
         if (signersName && signersName.length > 0) {
@@ -483,7 +529,10 @@ async function PDF(req) {
         saveFileUsage(pdfSize, data.imageUrl, _resDoc?.CreatedBy?.objectId);
         if (updatedDoc && updatedDoc.isCompleted) {
           const doc = { ..._resDoc, AuditTrail: updatedDoc.AuditTrail, SignedUrl: data.imageUrl };
-          sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider, adapterConfig);
+          await sendMailsaveCertifcate(doc, P12Buffer, isCustomMail, mailProvider, adapterConfig);
+        } else if (updatedDoc && !updatedDoc.isCompleted) {
+          const doc = { ..._resDoc, AuditTrail: updatedDoc.AuditTrail, SignedUrl: data.imageUrl };
+          await sendSignedMail(doc, signUser);
         }
         // `fs.unlinkSync` is used to remove exported signed pdf file from exports folder
         fs.unlinkSync(filePath);
