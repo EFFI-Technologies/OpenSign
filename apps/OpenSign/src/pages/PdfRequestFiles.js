@@ -568,7 +568,18 @@ function PdfRequestFiles(props) {
                 openSignUrl +
                 " target=_blank>here</a> </p></div></div></body></html>"
             };
-            await sendViewEmail(emailParams);
+            if (
+              !localStorage.getItem(
+                `${currUserId}-${documentData?.[0].objectId}`
+              )
+            ) {
+              await sendViewEmail(emailParams);
+              localStorage.setItem(
+                `${currUserId}-${documentData?.[0].objectId}`,
+                true
+              );
+            }
+
             try {
               await axios.post(
                 `${localStorage.getItem("baseUrl")}functions/callwebhook`,
