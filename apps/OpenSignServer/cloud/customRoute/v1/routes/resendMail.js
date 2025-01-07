@@ -8,7 +8,7 @@ export default async function resendMail(request, response) {
     const userMail = request.body.email;
     const email_subject = request.body.email_subject;
     const email_body = request.body.email_body;
-    const baseUrl = new URL(process.env.SERVER_URL);
+    const baseUrl = new URL(process.env.PUBLIC_URL);
 
     if (!reqToken) {
       return response.status(400).json({ error: 'Please Provide API Token' });
