@@ -43,8 +43,8 @@ export default async function resendMail(request, response) {
         const contacts = !userMail? _resDoc.Signers : _resDoc.Signers.filter(x => x.Email === userMail);
         //const contact = _resDoc.Signers.find(x => x.Email === userMail);
         const activeMailAdapter = _resDoc?.ExtUserPtr?.active_mail_adapter || '';
-        contacts.forEach(async contact => {
-          try {
+        try {
+          const emailPromises = contacts.map(async contact => {
             const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
             let url = `${cloudServerUrl}/functions/sendmailv3/`;
             const headers = {
@@ -137,14 +137,30 @@ export default async function resendMail(request, response) {
             };
 
             const res = await axios.post(url, params, { headers: headers });
-            if (res.data.result && res.data.result.status === 'success') {
-              return response.json({ result: 'mail sent successfully.' });
-            }
-          } catch (error) {
-            console.log('error', error);
-            return response.status(400).json({ error: error.message });
+            return res.data;
+          });
+
+          // Wait for all emails to be sent
+          const results = await Promise.all(emailPromises);
+          
+          // Check if all emails were sent successfully
+          const allSuccessful = results.every(
+            result => result.result && result.result.status === 'success'
+          );
+
+          if (allSuccessful) {
+            return response.json({ result: 'mail sent successfully.' });
+          } else {
+            return response.status(400).json({ 
+              error: 'Some emails failed to send',
+              results 
+            });
           }
-       });
+
+        } catch (error) {
+          console.log('error', error);
+          return response.status(400).json({ error: error.message });
+        }
       } else {
         return response.status(404).json({ error: 'document not found.' });
       }
