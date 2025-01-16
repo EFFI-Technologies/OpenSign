@@ -74,7 +74,7 @@ export async function createDocumentWithTemplate(request, response) {
   const send_email = request.body.send_email;
   const email_subject = request.body.email_subject;
   const email_body = request.body.email_body;
-  const sendInOrder = request.body.sendInOrder || true;
+  const sendInOrder = request.body.sendInOrder;
   const autoAdjust = request.body.autoAdjust;
   const TimeToCompleteDays = request.body.timeToCompleteDays || 15;
 
@@ -162,9 +162,9 @@ export async function createDocumentWithTemplate(request, response) {
                 if (ip) {
                   object.set('OriginIp', ip);
                 }
-                if (sendInOrder) {
+                if (sendInOrder !== undefined) {
                   object.set('SendinOrder', sendInOrder);
-                } else if (template?.SendinOrder && template?.SendinOrder) {
+                } else if (template?.SendinOrder) {
                   object.set('SendinOrder', template?.SendinOrder);
                 }
                 let templateSigner = template?.Signers ? template?.Signers : [];
