@@ -568,7 +568,7 @@ function PdfRequestFiles(props) {
                 openSignUrl +
                 " target=_blank>here</a> </p></div></div></body></html>"
             };
-            if (
+            if (localStorage &&
               !localStorage.getItem(
                 `${currUserId}-${documentData?.[0].objectId}`
               )
