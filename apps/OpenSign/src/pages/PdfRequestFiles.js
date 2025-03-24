@@ -573,11 +573,11 @@ function PdfRequestFiles(props) {
                 `${currUserId}-${documentData?.[0].objectId}`
               )
             ) {
-              await sendViewEmail(emailParams);
               localStorage.setItem(
                 `${currUserId}-${documentData?.[0].objectId}`,
                 true
               );
+              await sendViewEmail(emailParams);
             }
 
             try {
