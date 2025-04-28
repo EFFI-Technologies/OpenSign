@@ -18,7 +18,7 @@ export default async function getDocument(request, response) {
       };
       const Document = new Parse.Query('contracts_Document');
       Document.equalTo('objectId', request.params.document_id);
-     // Document.equalTo('CreatedBy', userPtr);
+      Document.equalTo('CreatedBy', userPtr);
       Document.notEqualTo('IsArchive', true);
       Document.include('Signers');
       Document.include('Folder');
