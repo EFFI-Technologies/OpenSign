@@ -21,12 +21,12 @@ describe('Parse Server example', () => {
     }
   });
   it('coverage for /', async () => {
-    const { data, headers } = await axios.get('http://localhost:30001/');
+    const { data, headers } = await axios.get('http://127.0.0.1:30001/');
     expect(headers['content-type']).toContain('text/html');
     expect(data).toBe('I dream of being a website.  Please star the parse-server repo on GitHub!');
   });
   it('coverage for /test', async () => {
-    const { data, headers } = await axios.get('http://localhost:30001/test');
+    const { data, headers } = await axios.get('http://127.0.0.1:30001/test');
     expect(headers['content-type']).toContain('text/html');
     expect(data).toContain('<title>Parse Server Example</title>');
   });

@@ -95,7 +95,7 @@ if (smtpenable) {
 const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 export const config = {
   databaseURI:
-    process.env.DATABASE_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/dev',
+    process.env.DATABASE_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/dev',
   cloud: function () {
     import('./cloud/main.js');
   },
@@ -246,12 +246,13 @@ if (!process.env.TESTING) {
   // Set the Keep-Alive and headers timeout to 100 seconds
   httpServer.keepAliveTimeout = 100000; // in milliseconds
   httpServer.headersTimeout = 100000; // in milliseconds
-  httpServer.listen(port, '0.0.0.0', function () {
+  httpServer.listen(port, '127.0.0.1', function () {
     console.log('effisign-server running on port ' + port + '.');
     const isWindows = process.platform === 'win32';
     // console.log('isWindows', isWindows);
 
-    const migrate = isWindows
+    setTimeout(() => {
+      const migrate = isWindows
       ? `set APPLICATION_ID=${process.env.APP_ID}&& set SERVER_URL=${cloudServerUrl}&& set MASTER_KEY=${process.env.MASTER_KEY}&& npx parse-dbtool migrate`
       : `APPLICATION_ID=${process.env.APP_ID} SERVER_URL=${cloudServerUrl} MASTER_KEY=${process.env.MASTER_KEY} npx parse-dbtool migrate`;
     exec(migrate, (error, stdout, stderr) => {
@@ -266,5 +267,6 @@ if (!process.env.TESTING) {
       }
       console.log(`Command output: ${stdout}`);
     });
+    }, 5000);
   });
 }

@@ -45,8 +45,8 @@ async function sendMailProvider(req, plan, monthchange) {
           } else {
             const path = new URL(req.params.url)?.pathname;
             const addr = process.env.CLOUD_PORT
-              ? `http://localhost:${process.env.CLOUD_PORT}`
-              : 'http://localhost';
+              ? `http://127.0.0.1:${process.env.CLOUD_PORT}`
+              : 'http://127.0.0.1';
             const localurl = addr + path;
             http.get(localurl, async function (response) {
               response.pipe(Pdf);
@@ -236,7 +236,7 @@ async function sendcustomsmtp(extRes, req) {
           });
         } else {
           const path = new URL(req.params.url)?.pathname;
-          const localurl = 'http://localhost:8080' + path;
+          const localurl = 'http://127.0.0.1:8080' + path;
           http.get(localurl, async function (response) {
             response.pipe(Pdf);
             response.on('end', () => resolve('success'));

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-export const cloudServerUrl = process.env.CLOUD_PORT ? `http://localhost:${process.env.CLOUD_PORT}/app` : 'http://localhost/app';
+export const cloudServerUrl = process.env.CLOUD_PORT ? `http://127.0.0.1:${process.env.CLOUD_PORT}/app` : 'http://127.0.0.1/app';
 export const appName = process.env.APP_NAME || 'EffiSign';
 export function customAPIurl() {
   const url = new URL(cloudServerUrl);

@@ -18,8 +18,8 @@ export default async function gooogleauth(request, response) {
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
       const redirectUri =
-        baseUrl?.hostname === 'localhost'
-          ? 'http://localhost:3000'
+        baseUrl?.hostname === '127.0.0.1'
+          ? 'http://127.0.0.1:3000'
           : 'https://console.com'; // Should match the redirect URI used in the authorization request
       const tokenEndpoint = 'https://oauth2.googleapis.com/token';
 
