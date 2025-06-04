@@ -1,8 +1,15 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import fs from 'node:fs';
 import fontkit from '@pdf-lib/fontkit';
+import moment from 'moment-timezone';
 
 export default async function GenerateCertificate(docDetails) {
+  const formatDate = date => {
+    if (date) {
+      return moment(date).tz('Australia/Sydney').format('DD/MM/YYYY HH:mm:ss') + ' AEST';
+    }
+    return '';
+  };
   const pdfDoc = await PDFDocument.create();
   // `fontBytes` is used to embed custom font in pdf
   const fontBytes = fs.readFileSync('./font/times.ttf'); //
@@ -24,10 +31,10 @@ export default async function GenerateCertificate(docDetails) {
   const textKeyColor = rgb(0.12, 0.12, 0.12);
   const textValueColor = rgb(0.3, 0.3, 0.3);
   const completedAt = new Date();
-  const completedUTCtime = completedAt.toUTCString();
+  const completedUTCtime = formatDate(completedAt);
   const signersCount = docDetails?.Signers?.length || 1;
   const generateAt = new Date();
-  const generatedUTCTime = generateAt.toUTCString();
+  const generatedUTCTime = formatDate(generateAt);
   const generatedOn = 'Generated On ' + generatedUTCTime;
   const OriginIp = docDetails?.OriginIp || '';
   const company = docDetails?.ExtUserPtr?.Company || '';
@@ -162,7 +169,7 @@ export default async function GenerateCertificate(docDetails) {
     color: textKeyColor,
   });
 
-  page.drawText(`${new Date(createdAt).toUTCString()}`, {
+  page.drawText(`${formatDate(new Date(createdAt))}`, {
     x: 105,
     y: 625,
     size: text,
@@ -294,7 +301,7 @@ export default async function GenerateCertificate(docDetails) {
       color: textKeyColor,
     });
 
-    page.drawText(`${new Date(x.ViewedOn).toUTCString()}`, {
+    page.drawText(`${formatDate(new Date(x.ViewedOn))}`, {
       x: half + 112,
       y: yPosition2,
       size: timeText,
@@ -326,7 +333,7 @@ export default async function GenerateCertificate(docDetails) {
       color: textKeyColor,
     });
 
-    page.drawText(`${new Date(x.SignedOn).toUTCString()}`, {
+    page.drawText(`${formatDate(new Date(x.SignedOn))}`, {
       x: half + 108,
       y: yPosition3 + 5,
       size: timeText,
@@ -465,7 +472,7 @@ export default async function GenerateCertificate(docDetails) {
         color: textKeyColor,
       });
 
-      currentPage.drawText(`${new Date(x.ViewedOn).toUTCString()}`, {
+      currentPage.drawText(`${formatDate(new Date(x.ViewedOn))}`, {
         x: half + 75,
         y: yPosition2,
         size: text,
@@ -497,7 +504,7 @@ export default async function GenerateCertificate(docDetails) {
         color: textKeyColor,
       });
 
-      currentPage.drawText(`${new Date(x.SignedOn).toUTCString()}`, {
+      currentPage.drawText(`${formatDate(new Date(x.SignedOn))}`, {
         x: half + 70,
         y: yPosition3,
         size: text,
