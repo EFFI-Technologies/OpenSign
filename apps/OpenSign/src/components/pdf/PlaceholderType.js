@@ -31,6 +31,16 @@ function PlaceholderType(props) {
   const years = range(1990, getYear(new Date()) + 16, 1);
   const fontSize = props.calculateFont(props.pos.options?.fontSize);
   const fontColor = props.pos.options?.fontColor || "black";
+  const textWidgetStyle = {
+    fontSize: fontSize,
+    color: fontColor,
+    fontFamily: "Arial, sans-serif",
+    overflow: "hidden",
+    textAlign: "start",
+    width: "100%",
+    display: "flex",
+    height: "100%"
+  };
   const months = [
     "January",
     "February",
@@ -651,70 +661,53 @@ function PlaceholderType(props) {
     case "date":
       return props.isSignYourself ||
         (props.isNeedSign && props.data?.signerObjId === props.signerObjId) ? (
-        <div>
-          <DatePicker
-            renderCustomHeader={({ date, changeYear, changeMonth }) => (
-              <div className="flex justify-start ml-2 ">
-                <select
-                  className="bg-transparent outline-none"
-                  value={months[getMonth(date)]}
-                  onChange={({ target: { value } }) =>
-                    changeMonth(months.indexOf(value))
-                  }
-                >
-                  {months.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="bg-transparent outline-none"
-                  value={getYear(date)}
-                  onChange={({ target: { value } }) => changeYear(value)}
-                >
-                  {years.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            disabled={
-              props.isPlaceholder ||
-              (props.isNeedSign &&
-                props.data?.signerObjId !== props.signerObjId)
-            }
-            onBlur={handleInputBlur}
-            closeOnScroll={true}
-            className={`${selectWidgetCls} outline-[#007bff]`}
-            selected={
-              props?.startDate
-                ? props?.startDate
-                : props.pos.options?.response &&
-                  new Date(props.pos.options.response)
-            }
-            onChange={(date) => handleOnDateChange(date)}
-            popperPlacement="top-end"
-            customInput={<ExampleCustomInput />}
-            dateFormat={
-              props.selectDate
-                ? props.selectDate?.format
-                : props.pos?.options?.validation?.format
-                  ? props.pos?.options?.validation?.format
-                  : "MM/dd/yyyy"
-            }
-          />
-        </div>
+        <DatePicker
+          renderCustomHeader={({ date, changeYear, changeMonth }) => (
+            <div className="flex justify-start ml-2 ">
+              <select
+                className="bg-transparent outline-none"
+                value={months[getMonth(date)]}
+                onChange={({ target: { value } }) =>
+                  changeMonth(months.indexOf(value))
+                }
+              >
+                {months.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="bg-transparent outline-none"
+                value={getYear(date)}
+                onChange={({ target: { value } }) => changeYear(value)}
+              >
+                {years.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          disabled={true}
+          closeOnScroll={true}
+          className={`${selectWidgetCls} outline-[#007bff]`}
+          selected={props?.startDate}
+          popperPlacement="top-end"
+          customInput={<ExampleCustomInput />}
+          dateFormat={
+            props.selectDate
+              ? props.selectDate?.format
+              : props.pos?.options?.validation?.format
+                ? props.pos?.options?.validation?.format
+                : "MM/dd/yyyy"
+          }
+        />
       ) : (
         <div
-          style={{
-            fontSize: fontSize,
-            color: fontColor,
-            fontFamily: "Arial, sans-serif"
-          }}
-          className="items-center overflow-hidden"
+          style={textWidgetStyle}
+          className="select-none-cls overflow-hidden"
         >
           <span>
             {props.selectDate
