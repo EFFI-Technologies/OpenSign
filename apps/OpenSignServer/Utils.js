@@ -152,7 +152,7 @@ export function formatWidgetOptions(type, options) {
       let mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
       let yyyy = today.getFullYear();
       today = dd + '-' + mm + '-' + yyyy;
-      let dateFormat = options?.format;
+      let dateFormat = options?.format || 'dd-MM-yyyy';
       dateFormat = dateFormat.replace(/m/g, 'M');
       return {
         status: status,
