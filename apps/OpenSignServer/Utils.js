@@ -126,6 +126,7 @@ export const updateMailCount = async (extUserId, plan, monthchange) => {
 };
 
 export function formatWidgetOptions(type, options) {
+  options = options || {};
   const status = options?.required === true ? 'required' : 'optional' || 'required';
   const defaultValue = options?.default || '';
   const values = options?.values || [];
@@ -156,7 +157,7 @@ export function formatWidgetOptions(type, options) {
       dateFormat = dateFormat.replace(/m/g, 'M');
       return {
         status: status,
-        name: options.name || 'date',
+        name: options?.name || 'date',
         response: defaultValue || today,
         validation: { format: dateFormat || 'dd-MM-yyyy', type: 'date-format' },
       };
