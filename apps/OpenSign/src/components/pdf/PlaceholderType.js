@@ -15,6 +15,7 @@ import "../../styles/signature.css";
 import RegexParser from "regex-parser";
 import { emailRegex } from "../../constant/const";
 import { useTranslation } from "react-i18next";
+import moment from "moment";
 const textWidgetCls =
   "w-full h-full md:min-w-full md:min-h-full z-[999] text-[12px] rounded-[2px] border-[1px] border-[#007bff] overflow-hidden resize-none outline-none text-base-content item-center whitespace-pre-wrap bg-white";
 const selectWidgetCls =
@@ -659,8 +660,18 @@ function PlaceholderType(props) {
         </div>
       );
     case "date":
-      return props.isSignYourself ||
-        (props.isNeedSign && props.data?.signerObjId === props.signerObjId) ? (
+      const showDatePicker =
+        props.isSignYourself ||
+        (props.isNeedSign && props.data?.signerObjId === props.signerObjId);
+
+      if (showDatePicker) {
+        const now = moment();
+        if (!props?.startDate || !now.isSame(moment(props?.startDate), "day")) {
+          handleOnDateChange(new Date());
+        }
+      }
+
+      return showDatePicker ? (
         <DatePicker
           renderCustomHeader={({ date, changeYear, changeMonth }) => (
             <div className="flex justify-start ml-2 ">
@@ -690,11 +701,14 @@ function PlaceholderType(props) {
               </select>
             </div>
           )}
-          disabled={true}
+          disabled={false}
           closeOnScroll={true}
           className={`${selectWidgetCls} outline-[#007bff]`}
           selected={props?.startDate}
           popperPlacement="top-end"
+          onChange={handleOnDateChange}
+          maxDate={new Date()}
+          minDate={new Date()}
           customInput={<ExampleCustomInput />}
           dateFormat={
             props.selectDate
