@@ -1244,9 +1244,9 @@ const ReportTable = (props) => {
                     <th className="px-4 py-2">{t(`report-heading.${item}`)}</th>
                   </React.Fragment>
                 ))}
-                {props.ReportName === "Templates" && isEnableSubscription && (
+                {/* {props.ReportName === "Templates" && isEnableSubscription && (
                   <th className="px-4 py-2">{t("public")}</th>
-                )}
+                )} */}
                 {props.actions?.length > 0 && (
                   <th className="px-4 py-2 text-transparent pointer-events-none">
                     {t("action")}
@@ -1423,7 +1423,7 @@ const ReportTable = (props) => {
                             "-"
                           )}
                         </td>
-                        {props.ReportName === "Templates" &&
+                        {/* {props.ReportName === "Templates" &&
                           isEnableSubscription && (
                             <td className=" pl-[20px] py-2">
                               {props.ReportName === "Templates" && (
@@ -1582,7 +1582,7 @@ const ReportTable = (props) => {
                                 </ModalUi>
                               )}
                             </td>
-                          )}
+                          )} */}
                         <td className="px-2 py-2">
                           <div className="text-base-content min-w-max flex flex-row gap-x-2 gap-y-1 justify-start items-center">
                             {props.actions?.length > 0 &&
