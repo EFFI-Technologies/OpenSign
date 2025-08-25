@@ -664,9 +664,12 @@ function PlaceholderType(props) {
         props.isSignYourself ||
         (props.isNeedSign && props.data?.signerObjId === props.signerObjId);
 
+      console.log("d: showDatePicker", showDatePicker);
       if (showDatePicker) {
         const now = moment();
+        console.log("d: props?.startDate", props?.startDate);
         if (!props?.startDate || !now.isSame(moment(props?.startDate), "day")) {
+         console.log("d: handleOnDateChange");
           handleOnDateChange(new Date());
         }
       }
