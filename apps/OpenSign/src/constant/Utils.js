@@ -1524,6 +1524,7 @@ export const multiSignEmbed = async (
           } else if (position?.options?.defaultValue) {
             textContent = position?.options?.defaultValue;
           }
+          console.log("d: pos", position, textContent);
           const fixedWidth = widgetWidth; // Set your fixed width
           const isNewOnEnterLineExist = textContent.includes("\n");
 
