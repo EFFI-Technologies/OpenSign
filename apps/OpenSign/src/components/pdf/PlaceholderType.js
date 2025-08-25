@@ -297,7 +297,7 @@ function PlaceholderType(props) {
     const isDateChange = true;
     const dateObj = {
       date: date,
-      format: props.selectDate.format
+      format: props.selectDate?.format || "dd/MM/yyyy"
     };
     props.handleSaveDate(dateObj, isDateChange);
   };
@@ -673,6 +673,7 @@ function PlaceholderType(props) {
           handleOnDateChange(new Date());
         }
       }
+       console.log("d: props.selectDate", props.selectDate);
 
       return showDatePicker ? (
         <DatePicker

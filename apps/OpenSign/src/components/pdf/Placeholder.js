@@ -400,6 +400,8 @@ function Placeholder(props) {
       getDefaultdate(updateDate, data?.format).getTime()
     ).format(changeDateToMomentFormat(data?.format));
 
+    console.log("d: date", date);
+
     //`onChangeInput` is used to save data related to date in a placeholder field
     onChangeInput(
       date,
