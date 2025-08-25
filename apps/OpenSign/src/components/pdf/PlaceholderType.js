@@ -297,7 +297,7 @@ function PlaceholderType(props) {
     const isDateChange = true;
     const dateObj = {
       date: date,
-      format: props.selectDate?.format || "dd/MM/yyyy"
+      format: props.selectDate?.format || "MM/dd/yyyy"
     };
     props.handleSaveDate(dateObj, isDateChange);
   };
@@ -669,11 +669,11 @@ function PlaceholderType(props) {
         const now = moment();
         console.log("d: props?.startDate", props?.startDate);
         if (!props?.startDate || !now.isSame(moment(props?.startDate), "day")) {
-         console.log("d: handleOnDateChange");
+          console.log("d: handleOnDateChange");
           handleOnDateChange(new Date());
         }
       }
-       console.log("d: props.selectDate", props.selectDate);
+      console.log("d: props.selectDate", props.selectDate);
 
       return showDatePicker ? (
         <DatePicker
