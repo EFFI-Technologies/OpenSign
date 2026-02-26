@@ -188,6 +188,7 @@ const sendMailToAllSigners = async docId => {
                   replaceVar?.subject ||
                   `${senderName} has requested you to sign "${documentName}"`,
                 from: senderEmail,
+                fromName: senderName,
                 html:
                   replaceVar?.body ||
                   "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /> </head>   <body> <div style='background-color: #f5f5f5; padding: 20px'=> <div   style=' box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background: white;padding-bottom: 20px;'> <div style='padding:10px 10px 0 10px'><img src=" +

@@ -131,6 +131,7 @@ export default async function resendMail(request, response) {
               recipient: contact.Email,
               subject: subject,
               from: sender,
+              fromName: _resDoc.ExtUserPtr.Name,
               html: html,
               extUserId: _resDoc.ExtUserPtr.objectId,
               mailProvider: activeMailAdapter,
