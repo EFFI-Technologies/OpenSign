@@ -25,3 +25,6 @@ yarn-error.log*
 apps/OpenSign/public/mfbuild/*
 microfrontends/SignDocuments/build/*
 apps/OpenSignServer/files/files/*
+
+# Claude Code
+.claude/

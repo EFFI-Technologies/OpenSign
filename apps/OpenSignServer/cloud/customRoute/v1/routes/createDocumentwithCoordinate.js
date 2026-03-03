@@ -395,6 +395,7 @@ export default async function createDocumentwithCoordinate(request, response) {
                     recipient: contactMail[i].email,
                     subject: subject,
                     from: sender,
+                    fromName: parseExtUser.Name,
                     html: html,
                     extUserId: extUser.id,
                     mailProvider: parseExtUser?.active_mail_adapter || '',

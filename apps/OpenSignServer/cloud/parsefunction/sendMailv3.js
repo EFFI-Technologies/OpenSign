@@ -91,10 +91,16 @@ async function sendMailProvider(req, plan, monthchange) {
             console.log('Err in read certificate sendmailv3', err);
           }
         }
-        const from = req.params.from || '';
+        const originalFrom = req.params.from || '';
+        const fromName = (req.params.fromName || '').replace(/[<>\r\n]/g, '').trim() || undefined;
+        const from = fromName
+          ? `${fromName} via EffiSign <sign@effi.com.au>`
+          : originalFrom;
+        const replyTo = fromName ? originalFrom : undefined;
 
         let messageParamsWithAttachment = {
           from,
+          ...(replyTo && { replyTo, 'h:Reply-To': replyTo }),
           to: req.params.recipient,
           subject: req.params.subject,
           text: req.params.text || 'mail',
@@ -169,11 +175,16 @@ async function sendMailProvider(req, plan, monthchange) {
         }
       }
     } else {
-      const from = req.params.from || '';
-      const mailsender = ''; // smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const originalFrom = req.params.from || '';
+      const fromName = (req.params.fromName || '').replace(/[<>\r\n]/g, '').trim() || undefined;
+      const from = fromName
+        ? `${fromName} via EffiSign <sign@effi.com.au>`
+        : originalFrom;
+      const replyTo = fromName ? originalFrom : undefined;
 
       const messageParams = {
-        from: mailsender ? from + ' <' + mailsender + '>' : from,
+        from,
+        ...(replyTo && { replyTo, 'h:Reply-To': replyTo }),
         to: req.params.recipient,
         subject: req.params.subject,
         text: req.params.text || 'mail',

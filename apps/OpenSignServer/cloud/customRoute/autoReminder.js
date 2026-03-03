@@ -63,6 +63,7 @@ async function sendMail(doc, signer) {
     recipient: signer.Email,
     subject: mail.subject,
     from: doc?.ExtUserPtr?.Email,
+    fromName: doc?.ExtUserPtr?.Name,
     html: mail.body,
   };
   try {

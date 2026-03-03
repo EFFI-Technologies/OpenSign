@@ -365,6 +365,7 @@ export async function createDocumentWithTemplate(request, response) {
                         recipient: contactMail[i].email,
                         subject: subject,
                         from: sender,
+                        fromName: template.ExtUserPtr.Name,
                         html: html,
                         extUserId: template.ExtUserPtr.objectId,
                         mailProvider: template?.ExtUserPtr?.active_mail_adapter || '',
