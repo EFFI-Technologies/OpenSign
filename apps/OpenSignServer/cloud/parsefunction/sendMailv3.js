@@ -92,9 +92,9 @@ async function sendMailProvider(req, plan, monthchange) {
           }
         }
         const originalFrom = req.params.from || '';
-        const fromName = (req.params.fromName || '').replace(/[<>\r\n]/g, '').trim() || undefined;
+        const fromName = (req.params.fromName || '').replace(/[<>\r\n"]/g, '').trim() || undefined;
         const from = fromName
-          ? `${fromName} via EffiSign <sign@effi.com.au>`
+          ? `"${fromName} via EffiSign" <sign@effi.com.au>`
           : originalFrom;
         const replyTo = fromName ? originalFrom : undefined;
 
@@ -176,9 +176,9 @@ async function sendMailProvider(req, plan, monthchange) {
       }
     } else {
       const originalFrom = req.params.from || '';
-      const fromName = (req.params.fromName || '').replace(/[<>\r\n]/g, '').trim() || undefined;
+      const fromName = (req.params.fromName || '').replace(/[<>\r\n"]/g, '').trim() || undefined;
       const from = fromName
-        ? `${fromName} via EffiSign <sign@effi.com.au>`
+        ? `"${fromName} via EffiSign" <sign@effi.com.au>`
         : originalFrom;
       const replyTo = fromName ? originalFrom : undefined;
 
