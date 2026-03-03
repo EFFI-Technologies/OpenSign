@@ -553,6 +553,7 @@ function PdfRequestFiles(props) {
               recipient: senderEmail,
               subject: `${currentuserName} has viewed the doc - ${pdfName}`,
               from: clientEmail,
+              fromName: currentuserName,
               html:
                 "<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body>  <div style='background-color:#f5f5f5;padding:20px'>    <div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'> <div><img src=" +
                 imgPng +
@@ -1116,6 +1117,7 @@ function PdfRequestFiles(props) {
                             ? replaceVar?.subject
                             : `${pdfDetails?.[0].ExtUserPtr.Name} has requested you to sign "${pdfDetails?.[0].Name}"`,
                           from: senderEmail,
+                          fromName: senderName,
                           plan: plancode,
                           html: requestBody
                             ? replaceVar?.body
