@@ -809,6 +809,7 @@ const ReportTable = (props) => {
       recipient: userDetails?.Email,
       subject: mail.subject,
       from: doc?.ExtUserPtr?.Email,
+      fromName: doc?.ExtUserPtr?.Name,
       html: mail.body
     };
     try {

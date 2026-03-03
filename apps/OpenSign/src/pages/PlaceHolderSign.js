@@ -1147,6 +1147,7 @@ function PlaceHolderSign() {
             ? replaceVar?.subject
             : `${senderName} has requested you to sign "${documentName}"`,
           from: senderEmail,
+          fromName: senderName,
           plan: planCode,
           html: isCustomize
             ? replaceVar?.body
