@@ -177,7 +177,7 @@ export async function createDocumentWithTemplate(request, response) {
                     );
                   }
                   let parseSigners = [...signers];
-                  let createContactUrl = protocol + '/v1/createcontact';
+                  let createContactUrl = protocol + '/v1/upsertcontact';
 
                   for (const obj of parseSigners) {
                     const body = {
