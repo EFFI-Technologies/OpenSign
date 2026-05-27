@@ -45,7 +45,7 @@ const saveRoleContact = async contact => {
   acl.setReadAccess(contact.UserId.objectId, true);
   acl.setWriteAccess(contact.UserId.objectId, true);
   contactQuery.setACL(acl);
-  const contactRes = await contactQuery.save();
+  const contactRes = await contactQuery.save(null, { useMasterKey: true });
   if (contactRes) {
     return contactRes;
   }

@@ -82,7 +82,7 @@ export default async function createContact(request, response) {
                 acl.setWriteAccess(user.id, true);
                 contactQuery.setACL(acl);
 
-                const contactRes = await contactQuery.save();
+                const contactRes = await contactQuery.save(null, { useMasterKey: true });
                 const parseRes = JSON.parse(JSON.stringify(contactRes));
                 if (request.posthog) {
                   request.posthog?.capture({
@@ -118,7 +118,7 @@ export default async function createContact(request, response) {
                 acl.setWriteAccess(userRes.id, true);
 
                 contactQuery.setACL(acl);
-                const contactRes = await contactQuery.save();
+                const contactRes = await contactQuery.save(null, { useMasterKey: true });
                 if (contactRes) {
                   const parseRes = JSON.parse(JSON.stringify(contactRes));
                   if (request.posthog) {

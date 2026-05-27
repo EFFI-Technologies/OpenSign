@@ -15,7 +15,7 @@ export default async function savecontact(request) {
     query.equalTo('CreatedBy', currentUserPtr);
     query.notEqualTo('IsDeleted', true);
     query.equalTo('Email', email);
-    const res = await query.first();
+    const res = await query.first({ useMasterKey: true });
     if (!res) {
       const contactQuery = new Parse.Object('contracts_Contactbook');
       contactQuery.set('Name', name);
@@ -55,7 +55,7 @@ export default async function savecontact(request) {
           acl.setWriteAccess(currentUser.id, true);
           contactQuery.setACL(acl);
 
-          const res = await contactQuery.save();
+          const res = await contactQuery.save(null, { useMasterKey: true });
           const parseData = JSON.parse(JSON.stringify(res));
           return parseData;
         }
@@ -76,7 +76,7 @@ export default async function savecontact(request) {
           acl.setReadAccess(currentUser.id, true);
           acl.setWriteAccess(currentUser.id, true);
           contactQuery.setACL(acl);
-          const res = await contactQuery.save();
+          const res = await contactQuery.save(null, { useMasterKey: true });
           const parseData = JSON.parse(JSON.stringify(res));
           return parseData;
         }
@@ -105,7 +105,7 @@ export default async function savecontact(request) {
       query.equalTo('CreatedBy', currentUserPtr);
       query.notEqualTo('IsDeleted', true);
       query.equalTo('Email', email);
-      const res = await query.first();
+      const res = await query.first({ useMasterKey: true });
       if (!res) {
         const contactQuery = new Parse.Object('contracts_Contactbook');
         contactQuery.set('Name', name);
@@ -144,7 +144,7 @@ export default async function savecontact(request) {
             acl.setWriteAccess(currentUser.id, true);
             contactQuery.setACL(acl);
 
-            const res = await contactQuery.save();
+            const res = await contactQuery.save(null, { useMasterKey: true });
             const parseData = JSON.parse(JSON.stringify(res));
             return parseData;
           }
@@ -165,7 +165,7 @@ export default async function savecontact(request) {
             acl.setReadAccess(currentUser.id, true);
             acl.setWriteAccess(currentUser.id, true);
             contactQuery.setACL(acl);
-            const res = await contactQuery.save();
+            const res = await contactQuery.save(null, { useMasterKey: true });
             const parseData = JSON.parse(JSON.stringify(res));
             return parseData;
           }

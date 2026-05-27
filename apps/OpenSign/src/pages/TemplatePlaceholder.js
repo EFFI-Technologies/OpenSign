@@ -885,7 +885,7 @@ const TemplatePlaceholder = () => {
             headers: {
               "Content-Type": "application/json",
               "X-Parse-Application-Id": localStorage.getItem("parseAppId"),
-              sessionToken: localStorage.getItem("accesstoken")
+              "X-Parse-Session-Token": localStorage.getItem("accesstoken")
             }
           }
         )

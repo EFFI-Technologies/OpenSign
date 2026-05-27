@@ -1,7 +1,7 @@
 import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
 
-async function updateTemplate(template, isJwt = false) {
+async function updateTemplate(template) {
   try {
     if (template?.Id) {
       const updateTemplate = new Parse.Object('contracts_Template');
@@ -44,11 +44,7 @@ async function updateTemplate(template, isJwt = false) {
       updateTemplate.set('Signers', template.Signers);
 
       let updateTemplateRes;
-      if (isJwt) {
-        updateTemplateRes = await updateTemplate.save(null, { useMasterKey: true });
-      } else {
-        updateTemplateRes = await updateTemplate.save();
-      }
+      updateTemplateRes = await updateTemplate.save(null, { useMasterKey: true });
       return updateTemplateRes;
     } else {
       throw new Parse.Error(Parse.Error.INVALID_QUERY, 'Please provide Id.');
@@ -96,7 +92,7 @@ export default async function saveTemplate(request) {
       const appRes = await tokenQuery.first({ useMasterKey: true });
       const decoded = jwt.verify(jwttoken, appRes?.get('token'));
       if (decoded?.user_email) {
-        return await updateTemplate(template, true);
+        return await updateTemplate(template);
       } else {
         throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'Invalid token');
       }
