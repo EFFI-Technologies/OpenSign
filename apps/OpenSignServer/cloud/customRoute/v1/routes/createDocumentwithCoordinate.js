@@ -198,7 +198,7 @@ export default async function createDocumentwithCoordinate(request, response) {
               } else {
                 parseSigners = JSON.parse(signers);
               }
-              let createContactUrl = protocol + '/v1/createcontact';
+              let createContactUrl = protocol + '/v1/upsertcontact';
 
               for (const [index, element] of parseSigners.entries()) {
                 const body = {

@@ -15,6 +15,7 @@ import deletedTemplate from './routes/deleteTemplate.js';
 import getTemplatetList from './routes/getTemplateList.js';
 import updateTemplate from './routes/updateTemplate.js';
 import createContact from './routes/createContact.js';
+import upsertContact from './routes/upsertContact.js';
 import multer from 'multer';
 import updateDocument from './routes/updateDocument.js';
 import deleteDocument from './routes/deleteDocument.js';
@@ -44,6 +45,9 @@ app.get('/getuser', getUser);
 
 // get contact on the basis of id
 app.post('/createcontact', createContact);
+
+// upsert contact — updates existing contact by email or creates a new one
+app.post('/upsertcontact', upsertContact);
 
 // get contact on the basis of id
 app.get('/contact/:contact_id', getContact);
