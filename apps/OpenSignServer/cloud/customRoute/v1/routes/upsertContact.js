@@ -74,7 +74,7 @@ export default async function upsertContact(request, response) {
       if (phone) {
         _user.set('phone', phone);
       }
-      const user = await _user.save();
+      const user = await _user.save(null, { useMasterKey: true });
       userId = user.id;
     } catch (err) {
       if (err.code === 202) {
