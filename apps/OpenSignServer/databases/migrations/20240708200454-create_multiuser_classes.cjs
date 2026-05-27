@@ -1,3 +1,5 @@
+const { classLevelPermissions } = require('../../security/parseClassLevelPermissions.cjs');
+
 /**
  *
  * @param {Parse} Parse
@@ -9,6 +11,7 @@ exports.up = async Parse => {
   teamschema.addPointer('ParentId', 'contracts_Teams');
   teamschema.addPointer('OrganizationId', 'contracts_Organizations');
   teamschema.addArray('Ancestors');
+  teamschema.setCLP(classLevelPermissions.contracts_Teams);
   await teamschema.save();
 
   const orgSchema = new Parse.Schema('contracts_Organizations');
@@ -17,6 +20,7 @@ exports.up = async Parse => {
   orgSchema.addPointer('TenantId', 'partners_Tenant');
   orgSchema.addPointer('CreatedBy', '_User');
   orgSchema.addPointer('ExtUserId', 'contracts_Users');
+  orgSchema.setCLP(classLevelPermissions.contracts_Organizations);
   await orgSchema.save();
 
   const schema = new Parse.Schema('contracts_Users');

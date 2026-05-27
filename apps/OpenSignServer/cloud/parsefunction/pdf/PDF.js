@@ -155,7 +155,7 @@ async function sendCompletedMail(obj) {
         className: '_User',
         objectId: sender.UserId.objectId,
       });
-      const res = await tenantCreditsQuery.first();
+      const res = await tenantCreditsQuery.first({ useMasterKey: true });
       if (res) {
         const _res = JSON.parse(JSON.stringify(res));
         if (_res?.CompletionSubject) {

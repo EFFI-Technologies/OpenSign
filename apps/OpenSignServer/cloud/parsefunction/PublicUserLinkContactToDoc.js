@@ -116,7 +116,7 @@ const sendMailToAllSigners = async docId => {
       className: '_User',
       objectId: templateOwnerUserId,
     });
-    const res = await tenantCreditsQuery.first();
+    const res = await tenantCreditsQuery.first({ useMasterKey: true });
     if (res) {
       const existUserId = Doc?.ExtUserPtr?.objectId;
       try {
@@ -146,7 +146,8 @@ const sendMailToAllSigners = async docId => {
                 month: 'long',
                 year: 'numeric',
               });
-              const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+              const imgPng =
+                'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
               const objectId = signerMail[i].objectId;
               const hostPublicUrl = 'https://esign.effi.com.au';
 

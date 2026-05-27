@@ -1,3 +1,5 @@
+const { classLevelPermissions } = require('../../security/parseClassLevelPermissions.cjs');
+
 /**
  *
  * @param {Parse} Parse
@@ -22,6 +24,7 @@ exports.up = async Parse => {
   schema.addBoolean('SendinOrder')
   schema.addBoolean('SentToOthers')
   schema.addBoolean('AutomaticReminders')
+  schema.setCLP(classLevelPermissions.contracts_Template);
 
 
 
