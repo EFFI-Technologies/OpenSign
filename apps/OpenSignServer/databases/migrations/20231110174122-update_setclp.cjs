@@ -63,16 +63,20 @@ exports.up = async Parse => {
     .addDate('ExpiryDate')
     .addBoolean('SendinOrder', false)
     .addBoolean('AutomaticReminders', false)
+    .addDate('NextReminderDate')
     .addBoolean('IsCompleted', false)
     .addBoolean('IsDeclined', false)
     .addNumber('RemindOnceInEvery', 5)
     .addNumber('TimeToCompleteDays', 15)
     .addBoolean('SentToOthers', false) // check once
+    .addBoolean('IsSendMail')
+    .addDate('DocSentAt')
     .addBoolean('EnablePhoneOTP', false)
     .addDate('AgreementValidUntil')
     .addArray('Recipients')
     .addArray('Clauses')
     .addArray('AgreementDelta')
+    .addString('CertificateUrl')
     .setCLP(classLevelPermissions.contracts_Document);
   await doc.save(null, { useMasterKey: true });
 
