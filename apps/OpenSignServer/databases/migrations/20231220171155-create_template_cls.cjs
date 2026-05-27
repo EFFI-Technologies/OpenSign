@@ -24,6 +24,8 @@ exports.up = async Parse => {
   schema.addBoolean('SendinOrder')
   schema.addBoolean('SentToOthers')
   schema.addBoolean('AutomaticReminders')
+  schema.addNumber('RemindOnceInEvery')
+  schema.addDate('NextReminderDate')
   schema.setCLP(classLevelPermissions.contracts_Template);
 
 
