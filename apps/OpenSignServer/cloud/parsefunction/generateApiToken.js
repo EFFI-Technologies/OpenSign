@@ -1,16 +1,8 @@
 import { generateApiKey } from 'generate-api-key';
-import axios from 'axios';
-import { cloudServerUrl } from '../../Utils.js';
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function generateApiToken(request) {
-  const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
   try {
-    const userRes = await axios.get(serverUrl + '/users/me', {
-      headers: {
-        'X-Parse-Application-Id': process.env.APP_ID,
-        'X-Parse-Session-Token': request.headers['sessiontoken'],
-      },
-    });
-    const userId = userRes.data && userRes.data.objectId;
+    const userId = await requireSessionUserId(request);
     if (userId) {
       const tokenQuery = new Parse.Query('appToken');
       tokenQuery.equalTo('userId', { __type: 'Pointer', className: '_User', objectId: userId });

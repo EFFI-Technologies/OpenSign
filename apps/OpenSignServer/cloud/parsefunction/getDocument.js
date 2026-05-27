@@ -1,12 +1,11 @@
-import axios from 'axios';
-import { cloudServerUrl, parseJwt } from '../../Utils.js';
+import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { getRequestSessionToken, requireSessionUserId } from '../../security/parseSessionAuth.js';
 
 export default async function getDocument(request) {
-  const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
   const docId = request.params.docId;
   const jwttoken = request?.headers?.jwttoken || '';
-  const sessiontoken = request?.headers?.sessiontoken || '';
+  const sessiontoken = getRequestSessionToken(request?.headers);
   try {
     if (docId) {
       try {
@@ -31,13 +30,7 @@ export default async function getDocument(request) {
           } else {
             if (sessiontoken) {
               try {
-                const userRes = await axios.get(serverUrl + '/users/me', {
-                  headers: {
-                    'X-Parse-Application-Id': process.env.APP_ID,
-                    'X-Parse-Session-Token': sessiontoken,
-                  },
-                });
-                const userId = userRes.data && userRes.data?.objectId;
+                const userId = await requireSessionUserId(request);
                 const acl = res.getACL();
                 if (userId && acl && acl.getReadAccess(userId)) {
                   return document;
@@ -95,7 +88,7 @@ export default async function getDocument(request) {
     }
   } catch (err) {
     console.log('err', err);
-    if (err.code == 209) {
+    if (err.code === Parse.Error.INVALID_SESSION_TOKEN) {
       return { error: 'Invalid session token' };
     } else {
       return { error: "You don't have access of this document!" };

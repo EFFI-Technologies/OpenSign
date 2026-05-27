@@ -1,12 +1,10 @@
 import axios from 'axios';
-import { cloudServerUrl } from '../../Utils.js';
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function callWebhook(request) {
   const event = request.params.event;
   const body = request.params.body;
   const docId = body.objectId;
   const contactId = request.params.contactId;
-  const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
-  const appId = process.env.APP_ID;
   try {
     const docQuery = new Parse.Query('contracts_Document');
     docQuery.include('ExtUserPtr.TenantId');
@@ -14,13 +12,7 @@ export default async function callWebhook(request) {
     const isEnableOTP = docRes?.get('IsEnableOTP') || false;
     let userId;
     if (isEnableOTP) {
-      const userRes = await axios.get(serverUrl + '/users/me', {
-        headers: {
-          'X-Parse-Application-Id': appId,
-          'X-Parse-Session-Token': request.headers['sessiontoken'],
-        },
-      });
-      userId = userRes.data && userRes.data.objectId;
+      userId = await requireSessionUserId(request);
     }
     if (!isEnableOTP || userId) {
       if (event === 'viewed' && contactId) {

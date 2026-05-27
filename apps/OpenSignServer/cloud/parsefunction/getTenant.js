@@ -1,8 +1,8 @@
 import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { requireCurrentExtUser } from '../../security/parseSessionAuth.js';
 export default async function getTenant(request) {
   const jwttoken = request.headers.jwttoken || '';
-  const userId = request.params.userId || '';
   if (jwttoken) {
     const jwtDecode = parseJwt(jwttoken);
     if (jwtDecode?.user_email) {
@@ -40,19 +40,16 @@ export default async function getTenant(request) {
         return { status: 'error', result: 'Invalid token!' };
       }
     }
-  } else if (userId) {
+  } else {
     try {
-      const tenantCreditsQuery = new Parse.Query('contracts_Users');
-      tenantCreditsQuery.equalTo('UserId', {
-        __type: 'Pointer',
-        className: '_User',
-        objectId: userId,
-      });
-      const res = await tenantCreditsQuery.first({ useMasterKey: true });
-      if (res) {
-        return { objectId: res.get('TenantId')?.id };
+      const extUser = await requireCurrentExtUser(request);
+      if (extUser) {
+        return { objectId: extUser.get('TenantId')?.id };
       }
     } catch (e) {
+      if (e?.code === Parse.Error.INVALID_SESSION_TOKEN) {
+        return { status: 'error', result: 'Invalid session token!' };
+      }
       return 'user does not exist!';
     }
   }

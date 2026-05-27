@@ -1,26 +1,16 @@
 import axios from 'axios';
-import { cloudServerUrl } from '../../Utils.js';
-const appId = process.env.APP_ID;
-const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function gooogleauth(request, response) {
   const code = request.body.code;
   const baseUrl = new URL(process.env.SERVER_URL);
 
   try {
-    const userRes = await axios.get(serverUrl + '/users/me', {
-      headers: {
-        'X-Parse-Application-Id': appId,
-        'X-Parse-Session-Token': request.headers['sessiontoken'],
-      },
-    });
-    const userId = userRes.data && userRes.data.objectId;
+    const userId = await requireSessionUserId(request);
     if (userId) {
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
       const redirectUri =
-        baseUrl?.hostname === '127.0.0.1'
-          ? 'http://127.0.0.1:3000'
-          : 'https://console.com'; // Should match the redirect URI used in the authorization request
+        baseUrl?.hostname === '127.0.0.1' ? 'http://127.0.0.1:3000' : 'https://console.com'; // Should match the redirect URI used in the authorization request
       const tokenEndpoint = 'https://oauth2.googleapis.com/token';
 
       const params = new URLSearchParams();

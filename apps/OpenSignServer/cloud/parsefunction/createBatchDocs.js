@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { cloudServerUrl, parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { getRequestSessionToken, requireSessionUserId } from '../../security/parseSessionAuth.js';
 const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
 const appId = process.env.APP_ID;
 const licenseKey = process.env.LICENSE_KEY;
@@ -53,7 +54,8 @@ async function sendMail(document) {
   }
   for (let i = 0; i < signerMail.length; i++) {
     try {
-      const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+      const imgPng =
+        'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
       let url = `${serverUrl}/functions/sendmailv3`;
       const headers = {
         'Content-Type': 'application/json',
@@ -263,7 +265,7 @@ async function batchQuery(userId, Documents, Ip, parseConfig) {
 }
 export default async function createBatchDocs(request) {
   const strDocuments = request.params.Documents;
-  const sessionToken = request.headers?.sessiontoken;
+  const sessionToken = getRequestSessionToken(request.headers);
   const jwttoken = request.headers?.jwttoken;
   const Documents = JSON.parse(strDocuments);
   const Ip = request?.headers?.['x-real-ip'] || '';
@@ -276,8 +278,9 @@ export default async function createBatchDocs(request) {
     },
   };
   try {
-    if (request?.user) {
-      return await batchQuery(request.user.id, Documents, Ip, parseConfig);
+    if (request?.user || sessionToken) {
+      const userId = await requireSessionUserId(request);
+      return await batchQuery(userId, Documents, Ip, parseConfig);
     } else if (jwttoken) {
       const jwtDecode = parseJwt(jwttoken);
       if (jwtDecode?.user_email) {

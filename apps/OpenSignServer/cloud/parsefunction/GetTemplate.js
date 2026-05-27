@@ -1,9 +1,8 @@
-import axios from 'axios';
-import { cloudServerUrl, parseJwt } from '../../Utils.js';
+import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { requireSessionUserEmail } from '../../security/parseSessionAuth.js';
 
 export default async function GetTemplate(request) {
-  const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
   const templateId = request.params.templateId;
   const ispublic = request.params.ispublic;
   const jwttoken = request.headers?.jwttoken;
@@ -40,13 +39,7 @@ export default async function GetTemplate(request) {
           return { error: "You don't have access of this document!" };
         }
       } else if (sessiontoken) {
-        const userRes = await axios.get(serverUrl + '/users/me', {
-          headers: {
-            'X-Parse-Application-Id': process.env.APP_ID,
-            'X-Parse-Session-Token': sessiontoken,
-          },
-        });
-        userEmail = userRes.data && userRes.data.email;
+        userEmail = await requireSessionUserEmail(request);
       }
       if (templateId && userEmail) {
         try {
@@ -127,7 +120,7 @@ export default async function GetTemplate(request) {
     }
   } catch (err) {
     console.log('err', err);
-    if (err?.response?.data?.code === 209 || err.code == 209) {
+    if (err.code === Parse.Error.INVALID_SESSION_TOKEN) {
       return { error: 'Invalid session token' };
     } else {
       return { error: "You don't have access of this document!" };
