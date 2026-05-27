@@ -42,10 +42,7 @@ function withProtectedFields(clp, protectedFields) {
 }
 
 const classLevelPermissions = {
-  partners_Tenant: withProtectedFields(masterKeyOnlyCLP(), {
-    '*': ['FileAdapters', 'PfxFile'],
-    requiresAuthentication: ['FileAdapters', 'PfxFile'],
-  }),
+  partners_Tenant: masterKeyOnlyCLP(),
   partners_TenantCredits: authenticatedUsersCLP(),
   partners_DataFiles: authenticatedUsersCLP(),
   contracts_Contactbook: pointerOwnerCLP(['CreatedBy', 'UserId'], ['CreatedBy', 'UserId']),
