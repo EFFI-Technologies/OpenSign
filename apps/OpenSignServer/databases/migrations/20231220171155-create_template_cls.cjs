@@ -19,6 +19,7 @@ exports.up = async Parse => {
   schema.addString('Type');
   schema.addPointer('CreatedBy', '_User');
   schema.addPointer('ExtUserPtr', 'contracts_Users');
+  schema.addString('FileAdapterId')
   schema.addBoolean('EnablePhoneOTP')
   schema.addBoolean('EnableEmailOTP')
   schema.addBoolean('SendinOrder')
