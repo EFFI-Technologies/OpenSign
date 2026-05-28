@@ -84,6 +84,7 @@ import isUserInContactBook from './parsefunction/isUserInContactBook.js';
 import updateTourStatus from './parsefunction/updateTourStatus.js';
 import saveTemplate from './parsefunction/saveTemplate.js';
 import updateToPublicTemplate from './parsefunction/updateToPublicTemplate.js';
+import { registerCaptchaTriggers } from '../security/captcha.js';
 
 // This afterSave function triggers after an object is added or updated in the specified class, allowing for post-processing logic.
 Parse.Cloud.afterSave('contracts_Document', DocumentAftersave);
@@ -97,6 +98,7 @@ Parse.Cloud.afterSave('contracts_Users', ExtUserAftersave);
 Parse.Cloud.beforeSave('contracts_Document', DocumentBeforesave);
 Parse.Cloud.beforeSave('contracts_Template', TemplateBeforeSave);
 Parse.Cloud.beforeSave('contracts_Signature', SignatureBeforeSave);
+registerCaptchaTriggers(Parse);
 
 // This afterFind function triggers after a query retrieves objects from the specified class, allowing for post-processing of the results.
 Parse.Cloud.afterFind(Parse.User, UserAfterFind);

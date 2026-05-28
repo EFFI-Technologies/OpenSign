@@ -22,6 +22,7 @@ import { appName, cloudServerUrl, smtpenable, smtpsecure, useLocal } from './Uti
 import { SSOAuth } from './auth/authadapter.js';
 import mongoose from 'mongoose';
 import { normalizeParseSessionHeaders } from './security/parseSessionAuth.js';
+import { captchaParseAuthMiddleware } from './security/captcha.js';
 
 const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECONDS || 160);
 let fsAdapter;
@@ -204,6 +205,7 @@ if (!process.env.TESTING) {
   try {
     const server = new ParseServer(config);
     await server.start();
+    app.use(mountPath, captchaParseAuthMiddleware());
     app.use(mountPath, server.app);
   } catch (err) {
     console.log(err);

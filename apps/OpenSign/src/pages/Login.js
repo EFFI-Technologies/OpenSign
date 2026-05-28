@@ -23,6 +23,7 @@ import {
 import Loader from "../primitives/Loader";
 import { useTranslation } from "react-i18next";
 import SelectLanguage from "../components/pdf/SelectLanguage";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 function Login() {
   const { t, i18n } = useTranslation();
@@ -52,6 +53,13 @@ function Login() {
   const [image, setImage] = useState();
   const [isLoginSSO, setIsLoginSSO] = useState(false);
   const [errMsg, setErrMsg] = useState();
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
 
   useEffect(() => {
     checkUserExt();
@@ -91,11 +99,23 @@ function Login() {
     event.preventDefault();
     const { email, password } = state;
     if (email && password) {
+      if (isCaptchaEnabled && !captchaToken) {
+        setState({
+          ...state,
+          alertType: "warning",
+          alertMsg: "Please complete the captcha."
+        });
+        setTimeout(() => setState((prev) => ({ ...prev, alertMsg: "" })), 2000);
+        return;
+      }
+
       try {
         setState({ ...state, loading: true });
         localStorage.setItem("appLogo", appInfo.applogo);
         // Pass the username and password to logIn function
-        const user = await Parse.User.logIn(email, password);
+        const user = await Parse.User.logIn(email, password, {
+          context: { captchaToken }
+        });
         if (user) {
           let _user = user.toJSON();
           localStorage.setItem("UserInformation", JSON.stringify(_user));
@@ -241,11 +261,14 @@ function Login() {
           }
         }
       } catch (error) {
+        resetCaptcha();
         setState({
           ...state,
           loading: false,
           alertType: "danger",
-          alertMsg: "Invalid username or password!"
+          alertMsg: error?.message?.includes("Captcha")
+            ? error.message
+            : "Invalid username or password!"
         });
         console.error("Error while logging in user", error);
       } finally {
@@ -730,6 +753,10 @@ function Login() {
                         </div>
                       </div>
                     </fieldset>
+                    <Captcha
+                      onVerify={setCaptchaToken}
+                      resetKey={captchaResetKey}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-center text-xs font-bold mt-2">
                       <button
                         type="submit"
