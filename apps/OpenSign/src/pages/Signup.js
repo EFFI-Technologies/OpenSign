@@ -106,6 +106,7 @@ const Signup = () => {
         res
           .then(async (r) => {
             if (r) {
+              await Parse.User.become(r.getSessionToken());
               let roleData = appInfo.settings;
               if (roleData && roleData.length > 0) {
                 const params = {

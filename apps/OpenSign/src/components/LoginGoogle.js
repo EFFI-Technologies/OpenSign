@@ -126,6 +126,7 @@ const GoogleSignInBtn = ({
 
       // console.log("payload ", payload);
       if (payload && payload.sessiontoken) {
+        await Parse.User.become(payload.sessiontoken);
         const params = {
           userDetails: {
             name: userDetails.Name,

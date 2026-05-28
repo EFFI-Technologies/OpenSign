@@ -147,6 +147,7 @@ const PgSignUp = () => {
       // console.log("res ", res);
 
       if (res) {
+        await Parse.User.become(res.getSessionToken());
         const params = {
           userDetails: {
             jobTitle: zohoRes.data.result.jobTitle,

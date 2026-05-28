@@ -536,6 +536,7 @@ function Login() {
       );
       // console.log("payload ", payload);
       if (payload && payload.sessionToken) {
+        await Parse.User.become(payload.sessionToken);
         const params = {
           userDetails: {
             name: userInformation.name,

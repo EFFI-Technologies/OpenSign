@@ -1,8 +1,29 @@
 import axios from 'axios';
 import { cloudServerUrl } from '../../Utils.js';
+import { requireSessionUser } from '../../security/parseSessionAuth.js';
 const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
 const APPID = process.env.APP_ID;
 const masterKEY = process.env.MASTER_KEY;
+
+async function requireAdminUser(request) {
+  const user = await requireSessionUser(request);
+  const extUserQuery = new Parse.Query('contracts_Users');
+  extUserQuery.equalTo('UserId', {
+    __type: 'Pointer',
+    className: '_User',
+    objectId: user.id,
+  });
+  extUserQuery.containedIn('UserRole', ['contracts_Admin', 'contracts_OrgAdmin']);
+  extUserQuery.notEqualTo('IsDisabled', true);
+  const extUser = await extUserQuery.first({ useMasterKey: true });
+
+  if (!extUser) {
+    throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Admin privileges are required.');
+  }
+
+  return user;
+}
+
 async function addTeamAndOrg(extUser) {
   try {
     const orgCls = new Parse.Object('contracts_Organizations');
@@ -93,6 +114,8 @@ async function saveUser(userDetails) {
   }
 }
 export default async function AddAdmin(request) {
+  await requireAdminUser(request);
+
   const userDetails = request.params.userDetails;
   // const subscription = request.params.subscription;
   const user = await saveUser(userDetails);
