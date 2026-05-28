@@ -23,6 +23,7 @@ import { SSOAuth } from './auth/authadapter.js';
 import mongoose from 'mongoose';
 import { normalizeParseSessionHeaders } from './security/parseSessionAuth.js';
 
+const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECONDS || 160);
 let fsAdapter;
 if (useLocal !== 'true') {
   try {
@@ -35,7 +36,7 @@ if (useLocal !== 'true') {
       directAccess: true,
       preserveFileName: true,
       presignedUrl: true,
-      presignedUrlExpires: 900,
+      presignedUrlExpires: presignedUrlExpiresSeconds,
       s3overrides: {
         accessKeyId: process.env.DO_ACCESS_KEY_ID,
         secretAccessKey: process.env.DO_SECRET_ACCESS_KEY,

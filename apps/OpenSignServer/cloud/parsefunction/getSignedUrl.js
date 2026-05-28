@@ -1,5 +1,8 @@
 import AWS from 'aws-sdk';
 import { useLocal } from '../../Utils.js';
+
+const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECONDS || 160);
+
 export default function getPresignedUrl(url, adapter) {
   const credentials = {
     accessKeyId: adapter?.accessKeyId || process.env.DO_ACCESS_KEY_ID,
@@ -21,7 +24,7 @@ export default function getPresignedUrl(url, adapter) {
   const presignedGETURL = s3.getSignedUrl('getObject', {
     Bucket: adapter?.bucketName || process.env.DO_SPACE,
     Key: filename, //filename
-    Expires: 160, //time to expire in seconds
+    Expires: presignedUrlExpiresSeconds,
   });
   return presignedGETURL;
 }
