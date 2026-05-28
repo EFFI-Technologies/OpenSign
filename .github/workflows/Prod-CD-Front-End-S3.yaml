@@ -22,7 +22,7 @@ jobs:
       contents: read
     env:  # Environment variables for the entire job
       PUBLIC_URL: https://esign.effi.com.au/
-      GENERATE_SOURCEMAP: true
+      GENERATE_SOURCEMAP: false
       REACT_APP_SERVERURL: https://esign-service.effi.com.au/app
       REACT_APP_APPID: effisign
       CI: false
@@ -52,6 +52,7 @@ jobs:
         run: |
           cd apps/OpenSign  # Change directory to your frontend app folder
           npm run build  # This will build the frontend
+          find build -type f -name "*.map" -delete
 
       - name: List Directory Contents
         run: |
@@ -61,6 +62,7 @@ jobs:
       - name: Upload all files from OpenSign to S3
         run: |
           cd apps/OpenSign/build
+          aws s3 rm s3://${{ secrets.BUCKET }}/ --recursive --exclude "*" --include "*.map"
           aws s3 cp . s3://${{ secrets.BUCKET }}/ --recursive
         continue-on-error: false
 
