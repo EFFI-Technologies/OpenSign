@@ -1,6 +1,14 @@
 import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
 import { requireSessionUserEmail } from '../../security/parseSessionAuth.js';
+import { applyPresignedUrlsToRecord } from './getSignedUrl.js';
+
+function serializeTemplate(template) {
+  const templateRes = JSON.parse(JSON.stringify(applyPresignedUrlsToRecord(template)));
+  delete templateRes?.ExtUserPtr?.TenantId?.FileAdapters;
+  delete templateRes?.ExtUserPtr?.TenantId?.PfxFile;
+  return templateRes;
+}
 
 export default async function GetTemplate(request) {
   const templateId = request.params.templateId;
@@ -77,12 +85,9 @@ export default async function GetTemplate(request) {
               template.include('ExtUserPtr.TenantId');
             }
           }
-          const res = await template.first({ useMasterKey: true });
+          const res = await template.first({ useMasterKey: true, context: { skipPresign: true } });
           if (res) {
-            const templateRes = JSON.parse(JSON.stringify(res));
-            delete templateRes?.ExtUserPtr?.TenantId?.FileAdapters;
-            delete templateRes?.ExtUserPtr?.TenantId?.PfxFile;
-            return templateRes;
+            return serializeTemplate(res);
           } else {
             return { error: "You don't have access of this document!" };
           }
@@ -101,13 +106,10 @@ export default async function GetTemplate(request) {
         template.include('Signers');
         template.include('CreatedBy');
         template.include('ExtUserPtr.TenantId');
-        const res = await template.first({ useMasterKey: true });
+        const res = await template.first({ useMasterKey: true, context: { skipPresign: true } });
         // console.log("res ", res)
-        if (res) {
-          const templateRes = JSON.parse(JSON.stringify(res));
-          delete templateRes?.ExtUserPtr?.TenantId?.FileAdapters;
-          delete templateRes?.ExtUserPtr?.TenantId?.PfxFile;
-          return templateRes;
+        if (res?.get('IsPublic') === true) {
+          return serializeTemplate(res);
         } else {
           return { error: "You don't have access of this document!" };
         }

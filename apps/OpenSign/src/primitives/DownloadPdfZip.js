@@ -38,12 +38,10 @@ function DownloadPdfZip(props) {
         const fileAdapterId = pdfDetails?.[0]?.FileAdapterId
           ? pdfDetails?.[0]?.FileAdapterId
           : "";
-        console.log("pdfDetails?.[0] ", pdfDetails?.[0]);
         const signedUrl = await getSignedUrl(pdfUrl, docId, fileAdapterId);
-        console.log("signedUrl ", signedUrl);
         const pdf1Response = await fetch(signedUrl);
         if (!pdf1Response.ok) {
-          throw new Error(`Failed to fetch PDF: ${signedUrl}`);
+          throw new Error("Failed to fetch PDF");
         }
         const pdf1Blob = await pdf1Response.blob();
         const isZip = true;
@@ -55,7 +53,7 @@ function DownloadPdfZip(props) {
         );
         const pdf2Response = await fetch(certificateUrl);
         if (!pdf2Response.ok) {
-          throw new Error(`Failed to fetch certificate PDF: ${certificateUrl}`);
+          throw new Error("Failed to fetch certificate PDF");
         }
         const pdf2Blob = await pdf2Response.blob();
         // Add files to ZIP
@@ -67,10 +65,7 @@ function DownloadPdfZip(props) {
 
         // Generate the ZIP and trigger download
         const zipBlob = await zip.generateAsync({ type: "blob" });
-        saveAs(
-          zipBlob,
-          `${sanitizeFileName(pdfName)}_signed_by_EffiSign.zip`
-        );
+        saveAs(zipBlob, `${sanitizeFileName(pdfName)}_signed_by_EffiSign.zip`);
         setSelectType(1);
         props.setIsDownloadModal(false);
         setIsDownloading("");

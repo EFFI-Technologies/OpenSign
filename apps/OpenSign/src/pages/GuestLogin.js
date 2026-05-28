@@ -31,7 +31,8 @@ function GuestLogin() {
   const navigateToDoc = async (docId, contactId) => {
     try {
       const docDetails = await Parse.Cloud.run("getDocument", {
-        docId: docId
+        docId: docId,
+        contactId: contactId
       });
       if (!docDetails.error) {
         if (sendmail === "false") {

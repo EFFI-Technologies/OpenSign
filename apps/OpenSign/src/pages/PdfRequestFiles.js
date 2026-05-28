@@ -412,7 +412,11 @@ function PdfRequestFiles(props) {
       // `currUserId` will be contactId or extUserId
       let currUserId;
       //getting document details
-      const documentData = await contractDocument(docId);
+      const documentData = await contractDocument(
+        docId,
+        undefined,
+        contactBookId
+      );
       if (documentData && documentData.length > 0) {
         const url =
           documentData[0] &&
@@ -954,7 +958,11 @@ function PdfRequestFiles(props) {
             let pdfArrBuffer;
             //`contractDocument` function used to get updated SignedUrl
             // to resolve issue of widgets get remove automatically when more than 1 signers try to sign doc at a time
-            const documentData = await contractDocument(documentId);
+            const documentData = await contractDocument(
+              documentId,
+              undefined,
+              contactBookId || signerObjectId
+            );
             if (documentData && documentData.length > 0) {
               const url = documentData[0]?.SignedUrl || documentData[0]?.URL;
               //convert document url in array buffer format to use embed widgets in pdf using pdf-lib

@@ -27,7 +27,15 @@ const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECO
 let fsAdapter;
 if (useLocal !== 'true') {
   try {
-    const spacesEndpoint = new AWS.Endpoint(process.env.DO_ENDPOINT);
+    const s3overrides = {};
+    if (process.env.DO_ENDPOINT) {
+      s3overrides.endpoint = new AWS.Endpoint(process.env.DO_ENDPOINT);
+    }
+    if (process.env.DO_ACCESS_KEY_ID && process.env.DO_SECRET_ACCESS_KEY) {
+      s3overrides.accessKeyId = process.env.DO_ACCESS_KEY_ID;
+      s3overrides.secretAccessKey = process.env.DO_SECRET_ACCESS_KEY;
+    }
+
     const s3Options = {
       bucket: process.env.DO_SPACE,
       baseUrl: process.env.DO_BASEURL,
@@ -37,12 +45,10 @@ if (useLocal !== 'true') {
       preserveFileName: true,
       presignedUrl: true,
       presignedUrlExpires: presignedUrlExpiresSeconds,
-      s3overrides: {
-        accessKeyId: process.env.DO_ACCESS_KEY_ID,
-        secretAccessKey: process.env.DO_SECRET_ACCESS_KEY,
-        endpoint: spacesEndpoint,
-      },
     };
+    if (Object.keys(s3overrides).length > 0) {
+      s3Options.s3overrides = s3overrides;
+    }
     fsAdapter = new S3Adapter(s3Options);
   } catch (err) {
     console.log('Please provide AWS credintials in env file! Defaulting to local storage.');

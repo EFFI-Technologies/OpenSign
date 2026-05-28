@@ -1784,8 +1784,12 @@ export const contactBook = async (objectId) => {
 };
 
 //function for getting document details from contract_Documents class
-export const contractDocument = async (documentId, JwtToken) => {
-  const data = { docId: documentId };
+export const contractDocument = async (
+  documentId,
+  JwtToken,
+  contactId = ""
+) => {
+  const data = { docId: documentId, contactId };
   const token = JwtToken
     ? { jwtToken: JwtToken }
     : { sessionToken: localStorage.getItem("accesstoken") };

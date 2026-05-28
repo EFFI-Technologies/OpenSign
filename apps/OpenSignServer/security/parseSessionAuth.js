@@ -1,5 +1,7 @@
 export function getRequestSessionToken(headers = {}) {
-  return headers['x-parse-session-token'] || headers.sessiontoken || headers.sessionToken || '';
+  const token =
+    headers['x-parse-session-token'] || headers.sessiontoken || headers.sessionToken || '';
+  return token === 'null' || token === 'undefined' ? '' : token;
 }
 
 export function normalizeParseSessionHeaders(req, _res, next) {
