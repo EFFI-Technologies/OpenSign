@@ -142,7 +142,7 @@ function GuestLogin() {
           "Content-Type": "application/json",
           "X-Parse-Application-Id": parseId
         };
-        let body = { email: email, otp: OTP };
+        let body = { email: email, otp: OTP, docId: documentId };
         let user = await axios.post(url, body, { headers: headers });
         const loginResult = user.data.result;
         if (

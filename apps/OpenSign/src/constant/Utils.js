@@ -2072,11 +2072,21 @@ export const convertPdfArrayBuffer = async (url) => {
 export const handleSendOTP = async (email) => {
   try {
     let url = `${localStorage.getItem("baseUrl")}functions/SendOTPMailV1`;
+    const currentUser = Parse.User.current();
+    const currentEmail =
+      currentUser?.getEmail?.() || currentUser?.get?.("email") || "";
+    const recipient = email || currentEmail;
+    const sessionToken =
+      currentUser?.getSessionToken?.() || localStorage.getItem("accesstoken");
+    if (!recipient || !sessionToken) {
+      throw new Error("User is not authenticated.");
+    }
     const headers = {
       "Content-Type": "application/json",
-      "X-Parse-Application-Id": localStorage.getItem("parseAppId")
+      "X-Parse-Application-Id": localStorage.getItem("parseAppId"),
+      "X-Parse-Session-Token": sessionToken
     };
-    const body = { email: email };
+    const body = { email: recipient };
     await axios.post(url, body, { headers: headers });
   } catch (error) {
     alert(error.message);

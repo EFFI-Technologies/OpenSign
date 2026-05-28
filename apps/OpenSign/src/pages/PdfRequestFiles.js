@@ -1705,7 +1705,7 @@ function PdfRequestFiles(props) {
           "Content-Type": "application/json",
           "X-Parse-Application-Id": parseId
         };
-        let body = { email: contact.email, otp: otp };
+        let body = { email: contact.email, otp: otp, docId: publicRes?.docId };
         let user = await axios.post(url, body, { headers: headers });
         const loginResult = user.data.result;
         if (

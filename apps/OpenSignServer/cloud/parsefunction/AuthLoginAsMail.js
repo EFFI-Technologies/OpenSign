@@ -30,7 +30,7 @@ async function AuthLoginAsMail(request) {
     const email = normalizeEmail(request.params.email);
 
     const otpResult = await verifyOtpForEmail(email, otp, request);
-    if (!otpResult.ok || !otpResult.canLogin) {
+    if (!otpResult.ok || !otpResult.canLogin || otpResult.purpose !== 'guest-doc') {
       return OTP_INVALID_RESPONSE;
     }
 

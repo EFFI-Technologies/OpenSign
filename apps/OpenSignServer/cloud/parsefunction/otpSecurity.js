@@ -4,7 +4,7 @@ import { normalizeEmail } from './userLookup.js';
 export const OTP_SENT_RESPONSE = 'Otp send';
 export const OTP_INVALID_RESPONSE = 'Invalid Otp';
 
-const OTP_LENGTH = Number(process.env.OTP_LENGTH || 4);
+const OTP_LENGTH = Number(process.env.OTP_LENGTH || 6);
 const OTP_EXPIRY_MS = Number(process.env.OTP_EXPIRY_SECONDS || 5 * 60) * 1000;
 const OTP_EMAIL_MIN_INTERVAL_MS =
   Number(process.env.OTP_EMAIL_MIN_INTERVAL_SECONDS || 5 * 60) * 1000;
@@ -250,6 +250,12 @@ export async function verifyOtpForEmail(email, otp, request) {
   const record = await getOtpRecord(normalizedEmail);
   if (!record || isFuture(record.get('LockedUntil'), now)) {
     return { ok: false };
+  }
+
+  const recordDocId = String(record.get('DocId') || '').trim();
+  const requestDocId = String(request?.params?.docId || request?.params?.documentId || '').trim();
+  if (recordDocId && recordDocId !== requestDocId) {
+    return { ok: false, record };
   }
 
   const expiresAt = asDate(record.get('ExpiresAt'));

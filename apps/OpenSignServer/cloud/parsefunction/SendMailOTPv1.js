@@ -2,7 +2,7 @@ import axios from 'axios';
 import { appName, updateMailCount } from '../../Utils.js';
 import { cloudServerUrl } from '../../Utils.js';
 import { getRequestUser } from '../../security/parseSessionAuth.js';
-import { findUserByEmail, normalizeEmail } from './userLookup.js';
+import { normalizeEmail } from './userLookup.js';
 import { canIssueOtp, generateOtp, OTP_SENT_RESPONSE, storeOtp } from './otpSecurity.js';
 
 function collectEmails(value, emails = new Set()) {
@@ -91,16 +91,6 @@ async function getOtpContext(request, email) {
       purpose: 'email-verify',
       userId: requestUser.id,
       canLogin: false,
-    };
-  }
-
-  const user = await findUserByEmail(email);
-  if (user) {
-    return {
-      allowed: true,
-      purpose: 'passwordless-login',
-      userId: user.id,
-      canLogin: true,
     };
   }
 
