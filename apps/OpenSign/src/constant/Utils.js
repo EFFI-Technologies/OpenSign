@@ -599,7 +599,11 @@ export const signPdfFun = async (
   let isCustomCompletionMail = false;
   try {
     //get tenant details
-    const tenantDetails = await getTenantDetails(objectId);
+    const tenantDetails = await getTenantDetails(
+      objectId,
+      undefined,
+      documentId
+    );
     if (tenantDetails && tenantDetails === "user does not exist!") {
       return { status: "error", message: "User does not exist." };
     } else {
@@ -1990,7 +1994,7 @@ export const getAppLogo = async () => {
   }
 };
 
-export const getTenantDetails = async (objectId, jwttoken) => {
+export const getTenantDetails = async (objectId, jwttoken, docId) => {
   try {
     const url = `${localStorage.getItem("baseUrl")}functions/gettenant`;
     const parseAppId = localStorage.getItem("parseAppId");
@@ -1998,7 +2002,7 @@ export const getTenantDetails = async (objectId, jwttoken) => {
     const token = jwttoken
       ? { jwttoken: jwttoken }
       : { "X-Parse-Session-Token": accesstoken };
-    const data = jwttoken ? {} : { userId: objectId };
+    const data = jwttoken ? {} : { userId: objectId, docId };
     const res = await axios.post(url, data, {
       headers: {
         "Content-Type": "application/json",

@@ -718,7 +718,11 @@ function SignYourSelf() {
   const signPdfFun = async (base64Url, documentId) => {
     let isCustomCompletionMail = false;
 
-    const tenantDetails = await getTenantDetails(jsonSender.objectId);
+    const tenantDetails = await getTenantDetails(
+      jsonSender.objectId,
+      undefined,
+      documentId
+    );
     if (tenantDetails && tenantDetails === "user does not exist!") {
       alert(t("user-not-exist"));
     } else {
