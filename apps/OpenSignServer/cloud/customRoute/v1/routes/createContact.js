@@ -1,7 +1,9 @@
+import { getUserIdByEmail, normalizeEmail } from '../../../parsefunction/userLookup.js';
+
 export default async function createContact(request, response) {
   const name = request.body.name;
   const phone = request.body?.phone;
-  const email = request.body.email;
+  const email = normalizeEmail(request.body.email);
   const reqToken = request.headers['x-api-token'];
   if (!reqToken) {
     return response.status(400).json({ error: 'Please Provide API Token' });
@@ -103,19 +105,21 @@ export default async function createContact(request, response) {
             } catch (err) {
               console.log('err in', err);
               if (err.code === 202) {
-                const params = { email: email };
-                const userRes = await Parse.Cloud.run('getUserId', params);
+                const userId = await getUserIdByEmail(email);
+                if (!userId) {
+                  throw err;
+                }
                 contactQuery.set('CreatedBy', userPtr);
                 contactQuery.set('UserId', {
                   __type: 'Pointer',
                   className: '_User',
-                  objectId: userRes.id,
+                  objectId: userId,
                 });
                 const acl = new Parse.ACL();
                 acl.setReadAccess(userPtr.objectId, true);
                 acl.setWriteAccess(userPtr.objectId, true);
-                acl.setReadAccess(userRes.id, true);
-                acl.setWriteAccess(userRes.id, true);
+                acl.setReadAccess(userId, true);
+                acl.setWriteAccess(userId, true);
 
                 contactQuery.setACL(acl);
                 const contactRes = await contactQuery.save(null, { useMasterKey: true });

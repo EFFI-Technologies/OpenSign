@@ -1,7 +1,9 @@
+import { getUserIdByEmail, normalizeEmail } from '../../../parsefunction/userLookup.js';
+
 export default async function upsertContact(request, response) {
   const name = request.body.name;
   const phone = request.body?.phone;
-  const email = request.body.email;
+  const email = normalizeEmail(request.body.email);
   const reqToken = request.headers['x-api-token'];
   if (!reqToken) {
     return response.status(400).json({ error: 'Please Provide API Token' });
@@ -79,8 +81,10 @@ export default async function upsertContact(request, response) {
     } catch (err) {
       if (err.code === 202) {
         // Username already taken — look up existing _User
-        const userRes = await Parse.Cloud.run('getUserId', { email });
-        userId = userRes.id;
+        userId = await getUserIdByEmail(email);
+        if (!userId) {
+          throw err;
+        }
       } else {
         throw err;
       }

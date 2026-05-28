@@ -144,14 +144,16 @@ function GuestLogin() {
         };
         let body = { email: email, otp: OTP };
         let user = await axios.post(url, body, { headers: headers });
-        if (user.data.result === "Invalid Otp") {
+        const loginResult = user.data.result;
+        if (
+          !loginResult ||
+          typeof loginResult === "string" ||
+          loginResult.error
+        ) {
           alert(t("invalid-otp"));
           setLoading(false);
-        } else if (user.data.result === "user not found!") {
-          alert(t("user-not-found"));
-          setLoading(false);
         } else {
-          let _user = user.data.result;
+          let _user = loginResult;
           await Parse.User.become(_user.sessionToken);
           const parseId = localStorage.getItem("parseAppId");
           const contractUserDetails = await contractUsers();

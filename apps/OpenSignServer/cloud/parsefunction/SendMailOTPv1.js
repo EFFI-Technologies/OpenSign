@@ -1,7 +1,43 @@
 import axios from 'axios';
 import { appName, updateMailCount } from '../../Utils.js';
 import { cloudServerUrl } from '../../Utils.js';
-async function getDocument(docId) {
+import { getRequestUser } from '../../security/parseSessionAuth.js';
+import { findUserByEmail, normalizeEmail } from './userLookup.js';
+import { canIssueOtp, generateOtp, OTP_SENT_RESPONSE, storeOtp } from './otpSecurity.js';
+
+function collectEmails(value, emails = new Set()) {
+  if (!value) {
+    return emails;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectEmails(item, emails);
+    }
+    return emails;
+  }
+
+  if (typeof value === 'object') {
+    for (const [key, fieldValue] of Object.entries(value)) {
+      const normalizedKey = key.toLowerCase();
+      if (
+        typeof fieldValue === 'string' &&
+        (normalizedKey === 'email' || normalizedKey === 'useremail')
+      ) {
+        const normalized = normalizeEmail(fieldValue);
+        if (normalized) {
+          emails.add(normalized);
+        }
+      } else if (Array.isArray(fieldValue) || typeof fieldValue === 'object') {
+        collectEmails(fieldValue, emails);
+      }
+    }
+  }
+
+  return emails;
+}
+
+async function getDocumentOtpContext(docId, email) {
   try {
     const query = new Parse.Query('contracts_Document');
     query.equalTo('objectId', docId);
@@ -13,23 +49,83 @@ async function getDocument(docId) {
     query.include('Placeholders');
     query.notEqualTo('IsArchive', true);
     const res = await query.first({ useMasterKey: true });
+    if (!res) {
+      return { allowed: false };
+    }
+
     const _res = res.toJSON();
-    return _res?.ExtUserPtr?.objectId;
+    const allowedEmails = new Set();
+    collectEmails(_res?.Signers, allowedEmails);
+    collectEmails(_res?.Placeholders, allowedEmails);
+    collectEmails(_res?.Recipients, allowedEmails);
+
+    return {
+      allowed: allowedEmails.has(normalizeEmail(email)),
+      extUserId: _res?.ExtUserPtr?.objectId,
+      purpose: 'guest-doc',
+    };
   } catch (err) {
     console.log('err ', err);
+    return { allowed: false };
   }
 }
+
+async function getRequestUserSafe(request) {
+  try {
+    return await getRequestUser(request);
+  } catch (err) {
+    return null;
+  }
+}
+
+async function getOtpContext(request, email) {
+  const docId = request.params?.docId || '';
+  if (docId) {
+    return getDocumentOtpContext(docId, email);
+  }
+
+  const requestUser = await getRequestUserSafe(request);
+  if (requestUser && normalizeEmail(requestUser.get('email')) === normalizeEmail(email)) {
+    return {
+      allowed: true,
+      purpose: 'email-verify',
+      userId: requestUser.id,
+      canLogin: false,
+    };
+  }
+
+  const user = await findUserByEmail(email);
+  if (user) {
+    return {
+      allowed: true,
+      purpose: 'passwordless-login',
+      userId: user.id,
+      canLogin: true,
+    };
+  }
+
+  return { allowed: false };
+}
+
 async function sendMailOTPv1(request) {
   try {
     //--for elearning app side
-    let code = Math.floor(1000 + Math.random() * 9000);
-    let email = request.params.email;
-    var TenantId = request.params.TenantId ? request.params.TenantId : undefined;
-    const extUserId = await getDocument(request.params?.docId);
+    const code = generateOtp();
+    const email = normalizeEmail(request.params.email);
+    const tenantId = request.params.TenantId ? request.params.TenantId : undefined;
 
     if (email) {
-      const recipient = request.params.email;
-      const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+      const context = await getOtpContext(request, email);
+      if (!context.allowed) {
+        return OTP_SENT_RESPONSE;
+      }
+
+      const canSend = await canIssueOtp(email, request);
+      if (!canSend) {
+        return OTP_SENT_RESPONSE;
+      }
+
+      const recipient = email;
       try {
         let url = `${cloudServerUrl}/functions/sendmailv3/`;
         const headers = {
@@ -45,40 +141,29 @@ async function sendMailOTPv1(request) {
             `<html><head><meta http-equiv='Content-Type' content='text/html; charset=UTF-8' /></head><body><div style='background-color:#f5f5f5;padding:20px'><div style='box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;background-color:white;'><div style='background-color:red;padding:2px;font-family:system-ui; background-color:#47a3ad;'>    <p style='font-size:20px;font-weight:400;color:white;padding-left:20px',>OTP Verification</p></div><div style='padding:20px'><p style='font-family:system-ui;font-size:14px'>Your OTP for ${appName} verification is:</p><p style=' text-decoration: none; font-weight: bolder; color:blue;font-size:45px;margin:20px'>` +
             code +
             '</p></div> </div> </div></body></html>',
-          extUserId: extUserId,
+          extUserId: context.extUserId,
         };
         await axios.post(url, params, { headers: headers });
-        console.log('OTP sent', code);
         if (request.params?.docId) {
-          if (extUserId) {
-            updateMailCount(extUserId);
+          if (context.extUserId) {
+            updateMailCount(context.extUserId);
           }
         }
       } catch (err) {
         console.log('error in send OTP mail', err);
       }
-      const tempOtp = new Parse.Query('defaultdata_Otp');
-      tempOtp.equalTo('Email', email);
-      const resultOTP = await tempOtp.first({ useMasterKey: true });
-      // console.log('resultOTP', resultOTP);
-      if (resultOTP !== undefined) {
-        const updateOtpQuery = new Parse.Query('defaultdata_Otp');
-        const updateOtp = await updateOtpQuery.get(resultOTP.id, {
-          useMasterKey: true,
-        });
-        updateOtp.set('OTP', code);
-        updateOtp.save(null, { useMasterKey: true });
-        //   console.log("update otp Res in tempSendOtp ", updateRes);
-      } else {
-        const otpClass = Parse.Object.extend('defaultdata_Otp');
-        const newOtpQuery = new otpClass();
-        newOtpQuery.set('OTP', code);
-        newOtpQuery.set('Email', email);
-        newOtpQuery.set('TenantId', TenantId);
-        await newOtpQuery.save(null, { useMasterKey: true });
-        console.log('new otp Res in tempSendOtp ', newRes);
-      }
-      return 'Otp send';
+
+      await storeOtp({
+        email,
+        otp: code,
+        purpose: context.purpose,
+        docId: request.params?.docId,
+        tenantId,
+        userId: context.userId,
+        canLogin: context.canLogin !== false,
+      });
+
+      return OTP_SENT_RESPONSE;
     } else {
       return 'Please Enter valid email';
     }

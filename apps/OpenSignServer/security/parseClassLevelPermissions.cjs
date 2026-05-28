@@ -56,6 +56,8 @@ const classLevelPermissions = {
   contracts_Subscriptions: masterKeyOnlyCLP(),
   contracts_Payments: masterKeyOnlyCLP(),
   contracts_Invoices: masterKeyOnlyCLP(),
+  defaultdata_Otp: masterKeyOnlyCLP(),
+  defaultdata_OtpRateLimit: masterKeyOnlyCLP(),
   appToken: masterKeyOnlyCLP(),
 };
 

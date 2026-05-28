@@ -569,7 +569,8 @@ function PdfRequestFiles(props) {
                 openSignUrl +
                 " target=_blank>here</a> </p></div></div></body></html>"
             };
-            if (localStorage &&
+            if (
+              localStorage &&
               !localStorage.getItem(
                 `${currUserId}-${documentData?.[0].objectId}`
               )
@@ -1706,14 +1707,16 @@ function PdfRequestFiles(props) {
         };
         let body = { email: contact.email, otp: otp };
         let user = await axios.post(url, body, { headers: headers });
-        if (user.data.result === "Invalid Otp") {
+        const loginResult = user.data.result;
+        if (
+          !loginResult ||
+          typeof loginResult === "string" ||
+          loginResult.error
+        ) {
           alert(t("invalid-otp"));
           setLoading(false);
-        } else if (user.data.result === "user not found!") {
-          alert(t("user-not-found"));
-          setLoading(false);
         } else {
-          let _user = user.data.result;
+          let _user = loginResult;
           const parseId = localStorage.getItem("parseAppId");
           await Parse.User.become(_user.sessionToken);
           const contractUserDetails = await contractUsers();

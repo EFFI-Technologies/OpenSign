@@ -1,10 +1,11 @@
 import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { getUserIdByEmail, normalizeEmail } from './userLookup.js';
 
 export default async function savecontact(request) {
   const name = request.params.name;
   const phone = request.params.phone;
-  const email = request.params.email;
+  const email = normalizeEmail(request.params.email);
   const tenantId = request.params.tenantId;
   const jwttoken = request.headers.jwttoken;
 
@@ -62,13 +63,15 @@ export default async function savecontact(request) {
       } catch (err) {
         console.log('err ', err);
         if (err.code === 202) {
-          const params = { email: email };
-          const userRes = await Parse.Cloud.run('getUserId', params);
+          const userId = await getUserIdByEmail(email);
+          if (!userId) {
+            throw err;
+          }
           contactQuery.set('CreatedBy', currentUserPtr);
           contactQuery.set('UserId', {
             __type: 'Pointer',
             className: '_User',
-            objectId: userRes.id,
+            objectId: userId,
           });
           const acl = new Parse.ACL();
           acl.setPublicReadAccess(true);
@@ -151,13 +154,15 @@ export default async function savecontact(request) {
         } catch (err) {
           console.log('err ', err);
           if (err.code === 202) {
-            const params = { email: email };
-            const userRes = await Parse.Cloud.run('getUserId', params);
+            const existingUserId = await getUserIdByEmail(email);
+            if (!existingUserId) {
+              throw err;
+            }
             contactQuery.set('CreatedBy', currentUserPtr);
             contactQuery.set('UserId', {
               __type: 'Pointer',
               className: '_User',
-              objectId: userRes.id,
+              objectId: existingUserId,
             });
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);

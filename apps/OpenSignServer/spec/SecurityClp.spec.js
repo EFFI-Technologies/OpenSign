@@ -8,6 +8,8 @@ describe('security class-level permissions', () => {
     'contracts_Contactbook',
     'contracts_Webhook',
     'contracts_Signature',
+    'defaultdata_Otp',
+    'defaultdata_OtpRateLimit',
   ];
 
   it('does not allow public wildcard access on the reported exposed classes', () => {
