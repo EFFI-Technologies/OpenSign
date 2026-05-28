@@ -40,4 +40,13 @@ describe('security class-level permissions', () => {
     expect(classLevelPermissions.contracts_Signature.readUserFields).toEqual(['UserId']);
     expect(classLevelPermissions.contracts_Signature.writeUserFields).toEqual(['UserId']);
   });
+
+  it('requires authentication before applying pointer-field access', () => {
+    for (const className of ['contracts_Contactbook', 'contracts_Signature']) {
+      const clp = classLevelPermissions[className];
+      for (const operation of ['get', 'find', 'count', 'create', 'update', 'delete']) {
+        expect(clp[operation]).toEqual({ requiresAuthentication: true });
+      }
+    }
+  });
 });

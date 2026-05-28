@@ -22,12 +22,12 @@ function authenticatedUsersCLP() {
 
 function pointerOwnerCLP(readUserFields, writeUserFields = readUserFields) {
   return {
-    get: {},
-    find: {},
-    count: {},
+    get: { requiresAuthentication: true },
+    find: { requiresAuthentication: true },
+    count: { requiresAuthentication: true },
     create: { requiresAuthentication: true },
-    update: {},
-    delete: {},
+    update: { requiresAuthentication: true },
+    delete: { requiresAuthentication: true },
     addField: {},
     readUserFields,
     writeUserFields,
