@@ -18,7 +18,7 @@ const OTP_VERIFY_LIMIT = Number(process.env.OTP_VERIFY_LIMIT || 5);
 const OTP_IP_VERIFY_WINDOW_MS = Number(process.env.OTP_IP_VERIFY_WINDOW_SECONDS || 60 * 60) * 1000;
 const OTP_IP_VERIFY_LIMIT = Number(process.env.OTP_IP_VERIFY_LIMIT || 60);
 const OTP_RATE_LIMIT_CLASS = 'defaultdata_OtpRateLimit';
-const DEV_OTP_HASH_SECRET = 'local-development-otp-secret';
+const EPHEMERAL_DEV_OTP_HASH_SECRET = crypto.randomBytes(32).toString('hex');
 
 let warnedAboutDevOtpSecret = false;
 
@@ -29,7 +29,7 @@ function getOtpSecret() {
   }
 
   if (process.env.TESTING === 'true' || process.env.NODE_ENV === 'test') {
-    return DEV_OTP_HASH_SECRET;
+    return EPHEMERAL_DEV_OTP_HASH_SECRET;
   }
 
   if (process.env.NODE_ENV === 'development') {
@@ -39,7 +39,7 @@ function getOtpSecret() {
       );
       warnedAboutDevOtpSecret = true;
     }
-    return DEV_OTP_HASH_SECRET;
+    return EPHEMERAL_DEV_OTP_HASH_SECRET;
   }
 
   throw new Error('OTP_HASH_SECRET or MASTER_KEY must be configured for OTP hashing.');
