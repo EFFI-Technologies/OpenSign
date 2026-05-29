@@ -1,5 +1,11 @@
+import crypto from 'crypto';
 import getUserId from '../cloud/parsefunction/getUserId.js';
-import { generateOtp, storeOtp, verifyOtpForEmail } from '../cloud/parsefunction/otpSecurity.js';
+import {
+  canIssueOtp,
+  generateOtp,
+  storeOtp,
+  verifyOtpForEmail,
+} from '../cloud/parsefunction/otpSecurity.js';
 
 describe('OTP security helpers', () => {
   it('generates OTPs without Math.random', () => {
@@ -40,6 +46,37 @@ describe('OTP security helpers', () => {
       headers: { 'x-real-ip': '127.0.0.2' },
     });
     expect(reuseResult.ok).toBe(false);
+  });
+
+  it('uses constant-time comparison for legacy plaintext OTP records', async () => {
+    const email = `legacy-otp-${Date.now()}@example.com`;
+    const record = new Parse.Object('defaultdata_Otp');
+    record.setACL(new Parse.ACL());
+    record.set('Email', email);
+    record.set('OTP', '654321');
+    record.set('CanLogin', true);
+    record.set('ExpiresAt', new Date(Date.now() + 60 * 1000));
+    await record.save(null, { useMasterKey: true });
+
+    const timingSafeEqual = spyOn(crypto, 'timingSafeEqual').and.callThrough();
+    const result = await verifyOtpForEmail(email, '654321', {
+      headers: { 'x-real-ip': '127.0.0.10' },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(timingSafeEqual).toHaveBeenCalled();
+  });
+
+  it('atomically limits concurrent OTP issue attempts', async () => {
+    const email = `rate-limit-${Date.now()}@example.com`;
+    const attempts = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        canIssueOtp(email, { headers: { 'x-real-ip': '198.51.100.10' } })
+      )
+    );
+
+    expect(attempts.filter(Boolean).length).toBe(6);
+    expect(attempts.filter(result => !result).length).toBe(4);
   });
 
   it('requires an authenticated caller for getUserId', async () => {

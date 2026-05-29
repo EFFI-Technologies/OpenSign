@@ -17,11 +17,32 @@ const OTP_VERIFY_WINDOW_MS = Number(process.env.OTP_VERIFY_WINDOW_SECONDS || 30 
 const OTP_VERIFY_LIMIT = Number(process.env.OTP_VERIFY_LIMIT || 5);
 const OTP_IP_VERIFY_WINDOW_MS = Number(process.env.OTP_IP_VERIFY_WINDOW_SECONDS || 60 * 60) * 1000;
 const OTP_IP_VERIFY_LIMIT = Number(process.env.OTP_IP_VERIFY_LIMIT || 60);
+const OTP_RATE_LIMIT_CLASS = 'defaultdata_OtpRateLimit';
+const DEV_OTP_HASH_SECRET = 'local-development-otp-secret';
+
+let warnedAboutDevOtpSecret = false;
 
 function getOtpSecret() {
-  return (
-    process.env.OTP_HASH_SECRET || process.env.MASTER_KEY || process.env.APP_ID || 'otp-secret'
-  );
+  const secret = process.env.OTP_HASH_SECRET || process.env.MASTER_KEY;
+  if (secret) {
+    return secret;
+  }
+
+  if (process.env.TESTING === 'true' || process.env.NODE_ENV === 'test') {
+    return DEV_OTP_HASH_SECRET;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    if (!warnedAboutDevOtpSecret) {
+      console.warn(
+        'OTP_HASH_SECRET or MASTER_KEY is missing; using a development-only OTP secret.'
+      );
+      warnedAboutDevOtpSecret = true;
+    }
+    return DEV_OTP_HASH_SECRET;
+  }
+
+  throw new Error('OTP_HASH_SECRET or MASTER_KEY must be configured for OTP hashing.');
 }
 
 function hashValue(value) {
@@ -54,6 +75,74 @@ function restrictedAcl() {
   return new Parse.ACL();
 }
 
+function rateLimitObjectId(key) {
+  return crypto.createHash('sha256').update(String(key)).digest('hex').slice(0, 20);
+}
+
+async function getRateLimitCollection() {
+  const adaptiveCollection = Parse?.Server?.database?.adapter?._adaptiveCollection;
+  if (typeof adaptiveCollection !== 'function') {
+    throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'OTP rate limiter unavailable.');
+  }
+
+  const collection = await adaptiveCollection.call(
+    Parse.Server.database.adapter,
+    OTP_RATE_LIMIT_CLASS
+  );
+  if (!collection?._mongoCollection?.findOneAndUpdate) {
+    throw new Parse.Error(Parse.Error.INTERNAL_SERVER_ERROR, 'OTP rate limiter requires MongoDB.');
+  }
+  return collection._mongoCollection;
+}
+
+async function findRateLimitObjectId(collection, key) {
+  const existing = await collection.findOne({ Key: key }, { projection: { _id: 1 } });
+  return existing?._id || rateLimitObjectId(key);
+}
+
+async function updateRateLimitWindow(collection, objectId, key, limit, windowMs, upsert = true) {
+  const now = new Date();
+  const windowBoundary = new Date(now.getTime() - windowMs);
+  const windowExpired = {
+    $or: [{ $ne: [{ $type: '$WindowStart' }, 'date'] }, { $lt: ['$WindowStart', windowBoundary] }],
+  };
+  const currentCount = { $ifNull: ['$Count', 0] };
+  const underLimit = { $lt: [currentCount, limit] };
+  const allowed = { $or: [windowExpired, underLimit] };
+
+  return collection.findOneAndUpdate(
+    { _id: objectId },
+    [
+      {
+        $set: {
+          Key: key,
+          Count: {
+            $cond: [
+              windowExpired,
+              1,
+              { $cond: [underLimit, { $add: [currentCount, 1] }, currentCount] },
+            ],
+          },
+          WindowStart: { $cond: [windowExpired, now, '$WindowStart'] },
+          ExpiresAt: {
+            $cond: [
+              windowExpired,
+              new Date(now.getTime() + windowMs),
+              { $add: ['$WindowStart', windowMs] },
+            ],
+          },
+          LastAllowed: allowed,
+          _rperm: [],
+          _wperm: [],
+          _created_at: { $ifNull: ['$_created_at', now] },
+          _updated_at: now,
+        },
+      },
+    ],
+    { upsert, returnDocument: 'after' }
+  );
+}
+
 export function getRequestIp(request = {}) {
   const forwardedFor = request.headers?.['x-forwarded-for'];
   if (forwardedFor) {
@@ -81,13 +170,25 @@ export function hashOtp(email, otp) {
     .digest('hex');
 }
 
-function safeCompare(left, right) {
+function safeCompareHex(left, right) {
   const leftBuffer = Buffer.from(String(left || ''), 'hex');
   const rightBuffer = Buffer.from(String(right || ''), 'hex');
   if (leftBuffer.length !== rightBuffer.length || leftBuffer.length === 0) {
     return false;
   }
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function safeCompareText(left, right) {
+  const leftDigest = crypto
+    .createHash('sha256')
+    .update(String(left ?? ''))
+    .digest();
+  const rightDigest = crypto
+    .createHash('sha256')
+    .update(String(right ?? ''))
+    .digest();
+  return crypto.timingSafeEqual(leftDigest, rightDigest);
 }
 
 async function getOtpRecord(email) {
@@ -111,40 +212,18 @@ async function consumeWindowRateLimit(key, limit, windowMs) {
     return true;
   }
 
-  const now = new Date();
-  const query = new Parse.Query('defaultdata_OtpRateLimit');
-  query.equalTo('Key', key);
-  let record = await query.first({ useMasterKey: true });
-  const windowStart = asDate(record?.get('WindowStart'));
-  const windowExpired = !windowStart || now.getTime() - windowStart.getTime() >= windowMs;
-
-  if (!record || windowExpired) {
-    record = record || new Parse.Object('defaultdata_OtpRateLimit');
-    record.setACL(restrictedAcl());
-    record.set('Key', key);
-    record.set('Count', 1);
-    record.set('WindowStart', now);
-    record.set('ExpiresAt', new Date(now.getTime() + windowMs));
-    await record.save(null, { useMasterKey: true });
-    return true;
+  const collection = await getRateLimitCollection();
+  const objectId = await findRateLimitObjectId(collection, key);
+  try {
+    const record = await updateRateLimitWindow(collection, objectId, key, limit, windowMs);
+    return Boolean(record?.LastAllowed);
+  } catch (error) {
+    if (error?.code === 11000) {
+      const record = await updateRateLimitWindow(collection, objectId, key, limit, windowMs, false);
+      return Boolean(record?.LastAllowed);
+    }
+    throw error;
   }
-
-  const count = record.get('Count') || 0;
-  if (count >= limit) {
-    return false;
-  }
-
-  record.increment('Count', 1);
-  record.set('ExpiresAt', new Date(windowStart.getTime() + windowMs));
-  const saved = await record.save(null, { useMasterKey: true });
-  await saved.fetch({ useMasterKey: true });
-  if ((saved.get('Count') || 0) > limit) {
-    saved.increment('Count', -1);
-    await saved.save(null, { useMasterKey: true });
-    return false;
-  }
-
-  return true;
 }
 
 export async function canIssueOtp(email, request) {
@@ -276,8 +355,8 @@ export async function verifyOtpForEmail(email, otp, request) {
 
   const otpHash = record.get('OTPHash');
   const legacyOtp = record.get('OTP');
-  const hashMatches = otpHash && safeCompare(otpHash, hashOtp(normalizedEmail, normalizedOtp));
-  const legacyMatches = legacyOtp !== undefined && String(legacyOtp) === normalizedOtp;
+  const hashMatches = otpHash && safeCompareHex(otpHash, hashOtp(normalizedEmail, normalizedOtp));
+  const legacyMatches = legacyOtp !== undefined && safeCompareText(legacyOtp, normalizedOtp);
 
   if (hashMatches || legacyMatches) {
     record.set('VerifyAttempts', 0);
