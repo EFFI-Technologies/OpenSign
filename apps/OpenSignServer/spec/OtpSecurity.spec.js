@@ -1,7 +1,15 @@
 import getUserId from '../cloud/parsefunction/getUserId.js';
-import { storeOtp, verifyOtpForEmail } from '../cloud/parsefunction/otpSecurity.js';
+import { generateOtp, storeOtp, verifyOtpForEmail } from '../cloud/parsefunction/otpSecurity.js';
 
 describe('OTP security helpers', () => {
+  it('generates OTPs without Math.random', () => {
+    spyOn(Math, 'random').and.throwError('Math.random must not be used for OTPs');
+
+    const otp = generateOtp();
+
+    expect(otp).toMatch(/^\d{6}$/);
+  });
+
   it('stores hashed OTPs and consumes them after successful verification', async () => {
     const email = `otp-${Date.now()}@example.com`;
     await storeOtp({

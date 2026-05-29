@@ -63,6 +63,24 @@ describe('upsertContact', () => {
     expect(res.data.phone).toBe('0400000001');
   });
 
+  it('does not provision guests with their email address as a password', async () => {
+    const email = `guest-password-${Date.now()}@example.com`;
+    await axios.post(
+      BASE_URL,
+      { name: 'Guest Password', email, phone: '0400000003' },
+      { headers: headers(apiToken) }
+    );
+
+    try {
+      await Parse.User.logIn(email, email);
+      fail('expected email-as-password login to fail');
+    } catch (err) {
+      expect(err.code).toBe(Parse.Error.OBJECT_NOT_FOUND);
+    } finally {
+      await Parse.User.logOut();
+    }
+  });
+
   it('updates an existing contact and returns the same objectId', async () => {
     const email = `upsert-${Date.now()}@example.com`;
 

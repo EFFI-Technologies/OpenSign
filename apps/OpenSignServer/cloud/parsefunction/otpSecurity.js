@@ -70,8 +70,8 @@ export function getRequestIp(request = {}) {
 
 export function generateOtp() {
   const min = 10 ** (OTP_LENGTH - 1);
-  const max = 10 ** OTP_LENGTH - 1;
-  return String(Math.floor(min + Math.random() * (max - min + 1)));
+  const max = 10 ** OTP_LENGTH;
+  return String(crypto.randomInt(min, max));
 }
 
 export function hashOtp(email, otp) {
@@ -136,7 +136,14 @@ async function consumeWindowRateLimit(key, limit, windowMs) {
 
   record.increment('Count', 1);
   record.set('ExpiresAt', new Date(windowStart.getTime() + windowMs));
-  await record.save(null, { useMasterKey: true });
+  const saved = await record.save(null, { useMasterKey: true });
+  await saved.fetch({ useMasterKey: true });
+  if ((saved.get('Count') || 0) > limit) {
+    saved.increment('Count', -1);
+    await saved.save(null, { useMasterKey: true });
+    return false;
+  }
+
   return true;
 }
 

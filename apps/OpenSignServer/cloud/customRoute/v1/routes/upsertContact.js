@@ -1,4 +1,5 @@
 import { getUserIdByEmail, normalizeEmail } from '../../../parsefunction/userLookup.js';
+import { generateGuestPassword } from '../../../parsefunction/userProvisioning.js';
 
 export default async function upsertContact(request, response) {
   const name = request.body.name;
@@ -72,7 +73,7 @@ export default async function upsertContact(request, response) {
       _user.set('name', name);
       _user.set('username', email);
       _user.set('email', email);
-      _user.set('password', email);
+      _user.set('password', generateGuestPassword());
       if (phone) {
         _user.set('phone', phone);
       }

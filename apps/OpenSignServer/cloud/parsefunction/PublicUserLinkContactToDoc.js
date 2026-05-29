@@ -1,4 +1,5 @@
 import { replaceMailVaribles } from '../../Utils.js';
+import { generateGuestPassword } from './userProvisioning.js';
 
 // `saveRoleContact` is used to save user in contracts_Guest role and create contact
 const saveRoleContact = async contact => {
@@ -379,7 +380,7 @@ export default async function PublicUserLinkContactToDoc(req) {
                     _user.set('name', name);
                     _user.set('username', email);
                     _user.set('email', email);
-                    _user.set('password', email);
+                    _user.set('password', generateGuestPassword());
                     if (phone) {
                       _user.set('phone', phone);
                     }
