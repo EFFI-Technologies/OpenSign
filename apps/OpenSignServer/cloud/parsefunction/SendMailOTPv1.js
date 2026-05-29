@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { appName, updateMailCount } from '../../Utils.js';
 import { cloudServerUrl } from '../../Utils.js';
+import { requireCaptcha } from '../../security/captcha.js';
 import { getRequestUser } from '../../security/parseSessionAuth.js';
 import { normalizeEmail } from './userLookup.js';
 import { canIssueOtp, generateOtp, OTP_SENT_RESPONSE, storeOtp } from './otpSecurity.js';
@@ -97,6 +98,20 @@ async function getOtpContext(request, email) {
   return { allowed: false };
 }
 
+async function requireOtpCaptcha(request, requestUser) {
+  const isCurrentUserEmailVerification = !request.params?.docId && requestUser;
+  if (isCurrentUserEmailVerification) {
+    return;
+  }
+
+  await requireCaptcha({
+    context: request.context,
+    headers: request.headers,
+    ip: request.ip,
+    master: request.master,
+  });
+}
+
 async function sendMailOTPv1(request) {
   try {
     //--for elearning app side
@@ -105,6 +120,9 @@ async function sendMailOTPv1(request) {
     const tenantId = request.params.TenantId ? request.params.TenantId : undefined;
 
     if (email) {
+      const requestUser = await getRequestUserSafe(request);
+      await requireOtpCaptcha(request, requestUser);
+
       const context = await getOtpContext(request, email);
       if (!context.allowed) {
         return OTP_SENT_RESPONSE;
@@ -160,6 +178,9 @@ async function sendMailOTPv1(request) {
   } catch (err) {
     console.log('err in sendMailOTPv1');
     console.log(err);
+    if (err?.code === 142) {
+      throw err;
+    }
     return err;
   }
 }

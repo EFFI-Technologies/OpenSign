@@ -12,8 +12,8 @@ function requireField(value, fieldName) {
   return sanitized;
 }
 
-async function getSignupUser(request, userDetails) {
-  const requestUser = await requireSessionUser(request);
+async function getSignupUser(request, userDetails, sessionUser) {
+  const requestUser = sessionUser || (await requireSessionUser(request));
   const requestedEmail = normalizeEmail(userDetails.email);
   const userEmail = normalizeEmail(requestUser.get('email') || requestUser.get('username'));
 
@@ -31,7 +31,8 @@ async function getSignupUser(request, userDetails) {
 }
 
 export default async function usersignup(request) {
-  const rawUserDetails = request.params.userDetails || {};
+  const sessionUser = await requireSessionUser(request);
+  const rawUserDetails = request.params?.userDetails || {};
   const userDetails = {
     ...rawUserDetails,
     name: requireField(rawUserDetails.name, 'Name'),
@@ -41,8 +42,8 @@ export default async function usersignup(request) {
     jobTitle: rawUserDetails.jobTitle ? String(rawUserDetails.jobTitle).trim() : '',
     role: PUBLIC_SIGNUP_ROLE,
   };
-  const subscription = request.params.subscription;
-  const user = await getSignupUser(request, userDetails);
+  const subscription = request.params?.subscription;
+  const user = await getSignupUser(request, userDetails, sessionUser);
 
   try {
     const extQuery = new Parse.Query('contracts_Users');

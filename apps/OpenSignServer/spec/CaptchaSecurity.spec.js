@@ -1,4 +1,5 @@
 import { captchaParseAuthMiddleware, requireCaptcha } from '../security/captcha.js';
+import sendMailOTPv1 from '../cloud/parsefunction/SendMailOTPv1.js';
 
 function restoreEnv(originalEnv) {
   for (const [key, value] of Object.entries(originalEnv)) {
@@ -78,5 +79,34 @@ describe('captcha security', () => {
     expect(nextCalled).toBe(false);
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toBe('Captcha verification is required.');
+  });
+
+  it('requires captcha for unauthenticated OTP issuance', async () => {
+    process.env.CAPTCHA_REQUIRED = 'true';
+    process.env.CAPTCHA_TURNSTILE_SECRET_KEY = 'secret';
+
+    await expectAsync(
+      sendMailOTPv1({
+        params: { email: 'captcha-otp@example.com', docId: 'doc-id' },
+        context: {},
+        headers: { origin: 'https://app.example.com' },
+        ip: '127.0.0.1',
+      })
+    ).toBeRejectedWithError('Captcha verification is required.');
+  });
+
+  it('requires captcha for document OTP issuance even with a session user', async () => {
+    process.env.CAPTCHA_REQUIRED = 'true';
+    process.env.CAPTCHA_TURNSTILE_SECRET_KEY = 'secret';
+
+    await expectAsync(
+      sendMailOTPv1({
+        user: { id: 'session-user-id' },
+        params: { email: 'captcha-doc-otp@example.com', docId: 'doc-id' },
+        context: {},
+        headers: { origin: 'https://app.example.com' },
+        ip: '127.0.0.1',
+      })
+    ).toBeRejectedWithError('Captcha verification is required.');
   });
 });
