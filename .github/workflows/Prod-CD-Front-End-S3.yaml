@@ -26,6 +26,7 @@ jobs:
       REACT_APP_SERVERURL: https://esign-service.effi.com.au/app
       REACT_APP_APPID: effisign
       CI: false
+      REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY: 0x4AAAAAADYG7J6fVh1v7ap-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
