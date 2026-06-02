@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
-export const cloudServerUrl = process.env.CLOUD_PORT ? `http://127.0.0.1:${process.env.CLOUD_PORT}/app` : 'http://127.0.0.1/app';
+export const cloudServerUrl = process.env.CLOUD_PORT
+  ? `http://127.0.0.1:${process.env.CLOUD_PORT}/app`
+  : 'http://127.0.0.1/app';
 export const appName = process.env.APP_NAME || 'EffiSign';
 export function customAPIurl() {
   const url = new URL(cloudServerUrl);
@@ -49,7 +51,7 @@ export const saveFileUsage = async (size, fileUrl, userId) => {
         className: '_User',
         objectId: userId,
       });
-      const tenant = await tenantQuery.first();
+      const tenant = await tenantQuery.first({ useMasterKey: true });
       if (tenant) {
         const tenantPtr = { __type: 'Pointer', className: 'partners_Tenant', objectId: tenant.id };
         try {

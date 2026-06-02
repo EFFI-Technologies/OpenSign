@@ -12,6 +12,7 @@ import { showTenant } from "../redux/reducers/ShowTenant";
 import Loader from "../primitives/Loader";
 import Title from "../components/Title";
 import { useTranslation } from "react-i18next";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 const AddAdmin = () => {
   const { t, i18n } = useTranslation();
@@ -30,12 +31,19 @@ const AddAdmin = () => {
   const [isAuthorize, setIsAuthorize] = useState(false);
   const [isSubscribeNews, setIsSubscribeNews] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [state, setState] = useState({
     loading: false,
     alertType: "success",
     alertMsg: ""
   });
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
 
   useEffect(() => {
     checkUserExist();
@@ -85,6 +93,16 @@ const AddAdmin = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (lengthValid && caseDigitValid && specialCharValid) {
+      if (isCaptchaEnabled && !captchaToken) {
+        setState({
+          loading: false,
+          alertType: "warning",
+          alertMsg: "Please complete the captcha."
+        });
+        setTimeout(() => setState((prev) => ({ ...prev, alertMsg: "" })), 2000);
+        return;
+      }
+
       clearStorage();
       setState({ loading: true });
       const userDetails = {
@@ -103,7 +121,7 @@ const AddAdmin = () => {
         user.set("password", password);
         user.set("phone", phone);
         user.set("username", email);
-        const userRes = await user.save();
+        const userRes = await user.save(null, { context: { captchaToken } });
         if (userRes) {
           const params = {
             userDetails: {
@@ -129,6 +147,7 @@ const AddAdmin = () => {
           }
         }
       } catch (error) {
+        resetCaptcha();
         console.log("err ", error);
         if (error.code === 202) {
           const params = { email: email };
@@ -449,11 +468,7 @@ const AddAdmin = () => {
                       </label>
                       <span
                         className="underline cursor-pointer ml-1"
-                        onClick={() =>
-                          openInNewTab(
-                            "https://effi.com.au"
-                          )
-                        }
+                        onClick={() => openInNewTab("https://effi.com.au")}
                       >
                         {t("term")}
                       </span>
@@ -475,6 +490,10 @@ const AddAdmin = () => {
                       </label> */}
                     </div>
                   </div>
+                  <Captcha
+                    onVerify={setCaptchaToken}
+                    resetKey={captchaResetKey}
+                  />
                   <div className="mx-4 text-center text-xs font-bold mb-3">
                     <button
                       type="submit"

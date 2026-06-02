@@ -9,6 +9,7 @@ import { showTenant } from "../redux/reducers/ShowTenant";
 import { fetchAppInfo } from "../redux/reducers/infoReducer";
 import Loader from "../primitives/Loader";
 import { useTranslation } from "react-i18next";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 const PgSignUp = () => {
   const { t } = useTranslation();
@@ -26,6 +27,13 @@ const PgSignUp = () => {
   const [lengthValid, setLengthValid] = useState(false);
   const [caseDigitValid, setCaseDigitValid] = useState(false);
   const [specialCharValid, setSpecialCharValid] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
 
   // below useEffect is used to fetch App data and save to redux state
   useEffect(() => {
@@ -105,6 +113,11 @@ const PgSignUp = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (lengthValid && caseDigitValid && specialCharValid) {
+      if (isCaptchaEnabled && !captchaToken) {
+        alert("Please complete the captcha.");
+        return;
+      }
+
       setIsLoader(true);
       if (formData.password === formData.confirmPassword) {
         const url = window.location.href;
@@ -143,10 +156,11 @@ const PgSignUp = () => {
       }
       user.set("name", zohoRes.data.result.name);
 
-      const res = await user.signUp();
+      const res = await user.signUp(null, { context: { captchaToken } });
       // console.log("res ", res);
 
       if (res) {
+        await Parse.User.become(res.getSessionToken());
         const params = {
           userDetails: {
             jobTitle: zohoRes.data.result.jobTitle,
@@ -166,6 +180,7 @@ const PgSignUp = () => {
       }
       // setIsLoader(false);
     } catch (error) {
+      resetCaptcha();
       console.log("err ", error);
       if (error.message === "Account already exists for this username.") {
         alert(t("account-already-exists"));
@@ -367,6 +382,7 @@ const PgSignUp = () => {
                   </p>
                 </div>
               )}
+              <Captcha onVerify={setCaptchaToken} resetKey={captchaResetKey} />
               <button
                 type="submit"
                 className="op-btn op-btn-primary w-full mt-[8px]"

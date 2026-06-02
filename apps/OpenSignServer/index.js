@@ -21,11 +21,22 @@ import { PostHog } from 'posthog-node';
 import { appName, cloudServerUrl, smtpenable, smtpsecure, useLocal } from './Utils.js';
 import { SSOAuth } from './auth/authadapter.js';
 import mongoose from 'mongoose';
+import { normalizeParseSessionHeaders } from './security/parseSessionAuth.js';
+import { captchaParseAuthMiddleware } from './security/captcha.js';
 
+const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECONDS || 160);
 let fsAdapter;
 if (useLocal !== 'true') {
   try {
-    const spacesEndpoint = new AWS.Endpoint(process.env.DO_ENDPOINT);
+    const s3overrides = {};
+    if (process.env.DO_ENDPOINT) {
+      s3overrides.endpoint = new AWS.Endpoint(process.env.DO_ENDPOINT);
+    }
+    if (process.env.DO_ACCESS_KEY_ID && process.env.DO_SECRET_ACCESS_KEY) {
+      s3overrides.accessKeyId = process.env.DO_ACCESS_KEY_ID;
+      s3overrides.secretAccessKey = process.env.DO_SECRET_ACCESS_KEY;
+    }
+
     const s3Options = {
       bucket: process.env.DO_SPACE,
       baseUrl: process.env.DO_BASEURL,
@@ -34,13 +45,11 @@ if (useLocal !== 'true') {
       directAccess: true,
       preserveFileName: true,
       presignedUrl: true,
-      presignedUrlExpires: 900,
-      s3overrides: {
-        accessKeyId: process.env.DO_ACCESS_KEY_ID,
-        secretAccessKey: process.env.DO_SECRET_ACCESS_KEY,
-        endpoint: spacesEndpoint,
-      },
+      presignedUrlExpires: presignedUrlExpiresSeconds,
     };
+    if (Object.keys(s3overrides).length > 0) {
+      s3Options.s3overrides = s3overrides;
+    }
     fsAdapter = new S3Adapter(s3Options);
   } catch (err) {
     console.log('Please provide AWS credintials in env file! Defaulting to local storage.');
@@ -92,7 +101,7 @@ if (smtpenable) {
   sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
   isMailAdapter = true;
 }
-const mailsender = '';//smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
+const mailsender = ''; //smtpenable ? process.env.SMTP_USER_EMAIL : process.env.MAILGUN_SENDER;
 export const config = {
   databaseURI:
     process.env.DATABASE_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/dev',
@@ -160,6 +169,7 @@ export const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(normalizeParseSessionHeaders);
 app.use(function (req, res, next) {
   req.headers['x-real-ip'] = getUserIP(req);
   next();
@@ -195,6 +205,7 @@ if (!process.env.TESTING) {
   try {
     const server = new ParseServer(config);
     await server.start();
+    app.use(mountPath, captchaParseAuthMiddleware());
     app.use(mountPath, server.app);
   } catch (err) {
     console.log(err);

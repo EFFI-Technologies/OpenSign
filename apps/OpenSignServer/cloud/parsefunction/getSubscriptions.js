@@ -1,8 +1,6 @@
-import axios from 'axios';
-import { cloudServerUrl, parseJwt } from '../../Utils.js';
+import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
-const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
-const appId = process.env.APP_ID;
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function getSubscription(request) {
   const extUserId = request.params.extUserId || '';
   const contactId = request.params.contactId || '';
@@ -56,18 +54,16 @@ export default async function getSubscription(request) {
       let userId;
       //`ispublic` is used in public profile to get subscription details
       if (!ispublic) {
-        const userRes = await axios.get(serverUrl + '/users/me', {
-          headers: {
-            'X-Parse-Application-Id': appId,
-            'X-Parse-Session-Token': request.headers['sessiontoken'],
-          },
-        });
-        userId = userRes.data && userRes.data.objectId;
+        userId = await requireSessionUserId(request);
       }
       if (userId || ispublic) {
         const extCls = new Parse.Query('contracts_Users');
         const exUser = await extCls.get(extUserId, { useMasterKey: true });
         if (exUser) {
+          const extUserOwnerId = exUser.get('UserId')?.id;
+          if (!ispublic && extUserOwnerId !== userId) {
+            return { status: 'error', result: 'Unauthorized extUserId!' };
+          }
           const subscriptionCls = new Parse.Query('contracts_Subscriptions');
           subscriptionCls.equalTo('TenantId', {
             __type: 'Pointer',
@@ -105,19 +101,19 @@ export default async function getSubscription(request) {
         // });
         // subscriptionCls.descending('createdAt');
         // const subcripitions = await subscriptionCls.first({ useMasterKey: true });
-       // if (subcripitions) {
-          // const _subcripitions = JSON.parse(JSON.stringify(subcripitions));
-          // if (_subcripitions.PlanCode === 'freeplan') {
-          //   return { status: 'success', result: { isSubscribed: false, plan: 'freeplan' } };
-          // } else if (_subcripitions?.Next_billing_date?.iso) {
-          //   if (new Date(_subcripitions.Next_billing_date.iso) > new Date()) {
-              return { status: 'success', result: { isSubscribed: true } };
-          //   } else {
-          //     return { status: 'success', result: { isSubscribed: false } };
-          //   }
-          // } else {
-          //   return { status: 'success', result: { isSubscribed: false } };
-          // }
+        // if (subcripitions) {
+        // const _subcripitions = JSON.parse(JSON.stringify(subcripitions));
+        // if (_subcripitions.PlanCode === 'freeplan') {
+        //   return { status: 'success', result: { isSubscribed: false, plan: 'freeplan' } };
+        // } else if (_subcripitions?.Next_billing_date?.iso) {
+        //   if (new Date(_subcripitions.Next_billing_date.iso) > new Date()) {
+        return { status: 'success', result: { isSubscribed: true } };
+        //   } else {
+        //     return { status: 'success', result: { isSubscribed: false } };
+        //   }
+        // } else {
+        //   return { status: 'success', result: { isSubscribed: false } };
+        // }
         // } else {
         //   return { status: 'success', result: { isSubscribed: false } };
         // }

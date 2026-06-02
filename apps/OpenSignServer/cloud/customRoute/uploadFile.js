@@ -73,14 +73,18 @@ async function uploadFile(req, res) {
       });
     } else {
       try {
-        const spacesEndpoint = new aws.Endpoint(DO_ENDPOINT);
-        const s3 = new aws.S3({
-          endpoint: spacesEndpoint,
-          accessKeyId: DO_ACCESS_KEY_ID,
-          secretAccessKey: DO_SECRET_ACCESS_KEY,
+        const s3Options = {
           signatureVersion: 'v4',
           region: process.env.DO_REGION,
-        });
+        };
+        if (DO_ENDPOINT) {
+          s3Options.endpoint = new aws.Endpoint(DO_ENDPOINT);
+        }
+        if (DO_ACCESS_KEY_ID && DO_SECRET_ACCESS_KEY) {
+          s3Options.accessKeyId = DO_ACCESS_KEY_ID;
+          s3Options.secretAccessKey = DO_SECRET_ACCESS_KEY;
+        }
+        const s3 = new aws.S3(s3Options);
         fileStorage = multerS3({
           acl: 'public-read',
           s3,

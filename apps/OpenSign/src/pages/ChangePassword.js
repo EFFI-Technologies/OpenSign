@@ -3,17 +3,33 @@ import Parse from "parse";
 import { Navigate } from "react-router-dom";
 import Title from "../components/Title";
 import { useTranslation } from "react-i18next";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 function ChangePassword() {
   const { t } = useTranslation();
   const [currentpassword, setCurrentPassword] = useState("");
   const [newpassword, setnewpassword] = useState("");
   const [confirmpassword, setconfirmpassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
+
   const handleSubmit = async (evt) => {
     evt.preventDefault();
     try {
       if (newpassword === confirmpassword) {
-        Parse.User.logIn(localStorage.getItem("userEmail"), currentpassword)
+        if (isCaptchaEnabled && !captchaToken) {
+          alert("Please complete the captcha.");
+          return;
+        }
+
+        Parse.User.logIn(localStorage.getItem("userEmail"), currentpassword, {
+          context: { captchaToken }
+        })
           .then(async (user) => {
             if (user) {
               const User = new Parse.User();
@@ -41,6 +57,7 @@ function ChangePassword() {
             }
           })
           .catch((error) => {
+            resetCaptcha();
             alert(t("password-update-alert-3"));
             console.error("Error while logging in user", error);
           });
@@ -110,6 +127,7 @@ function ChangePassword() {
               required
             />
           </div>
+          <Captcha onVerify={setCaptchaToken} resetKey={captchaResetKey} />
           <button
             type="submit"
             className="op-btn op-btn-primary shadow-md mt-2"

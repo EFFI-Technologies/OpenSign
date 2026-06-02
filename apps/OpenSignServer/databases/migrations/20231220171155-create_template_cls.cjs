@@ -1,3 +1,5 @@
+const { classLevelPermissions } = require('../../security/parseClassLevelPermissions.cjs');
+
 /**
  *
  * @param {Parse} Parse
@@ -17,11 +19,15 @@ exports.up = async Parse => {
   schema.addString('Type');
   schema.addPointer('CreatedBy', '_User');
   schema.addPointer('ExtUserPtr', 'contracts_Users');
+  schema.addString('FileAdapterId')
   schema.addBoolean('EnablePhoneOTP')
   schema.addBoolean('EnableEmailOTP')
   schema.addBoolean('SendinOrder')
   schema.addBoolean('SentToOthers')
   schema.addBoolean('AutomaticReminders')
+  schema.addNumber('RemindOnceInEvery')
+  schema.addDate('NextReminderDate')
+  schema.setCLP(classLevelPermissions.contracts_Template);
 
 
 

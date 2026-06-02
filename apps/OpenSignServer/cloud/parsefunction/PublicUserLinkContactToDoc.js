@@ -1,4 +1,5 @@
 import { replaceMailVaribles } from '../../Utils.js';
+import { generateGuestPassword } from './userProvisioning.js';
 
 // `saveRoleContact` is used to save user in contracts_Guest role and create contact
 const saveRoleContact = async contact => {
@@ -45,7 +46,7 @@ const saveRoleContact = async contact => {
   acl.setReadAccess(contact.UserId.objectId, true);
   acl.setWriteAccess(contact.UserId.objectId, true);
   contactQuery.setACL(acl);
-  const contactRes = await contactQuery.save();
+  const contactRes = await contactQuery.save(null, { useMasterKey: true });
   if (contactRes) {
     return contactRes;
   }
@@ -116,7 +117,7 @@ const sendMailToAllSigners = async docId => {
       className: '_User',
       objectId: templateOwnerUserId,
     });
-    const res = await tenantCreditsQuery.first();
+    const res = await tenantCreditsQuery.first({ useMasterKey: true });
     if (res) {
       const existUserId = Doc?.ExtUserPtr?.objectId;
       try {
@@ -146,7 +147,8 @@ const sendMailToAllSigners = async docId => {
                 month: 'long',
                 year: 'numeric',
               });
-              const imgPng = 'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
+              const imgPng =
+                'https://raw.githubusercontent.com/EFFI-Technologies/OpenSign/refs/heads/main/apps/OpenSign/src/assets/images/logo.png';
               const objectId = signerMail[i].objectId;
               const hostPublicUrl = 'https://esign.effi.com.au';
 
@@ -378,7 +380,7 @@ export default async function PublicUserLinkContactToDoc(req) {
                     _user.set('name', name);
                     _user.set('username', email);
                     _user.set('email', email);
-                    _user.set('password', email);
+                    _user.set('password', generateGuestPassword());
                     if (phone) {
                       _user.set('phone', phone);
                     }

@@ -19,6 +19,7 @@ import {
 import Loader from "../primitives/Loader";
 import { useTranslation } from "react-i18next";
 import SelectLanguage from "../components/pdf/SelectLanguage";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 const Signup = () => {
   const { width } = useWindowSize();
   const { t, i18n } = useTranslation();
@@ -42,7 +43,14 @@ const Signup = () => {
   const [caseDigitValid, setCaseDigitValid] = useState(false);
   const [specialCharValid, setSpecialCharValid] = useState(false);
   const [isAuthorize, setIsAuthorize] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
 
   const clearStorage = async () => {
     try {
@@ -84,6 +92,16 @@ const Signup = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (lengthValid && caseDigitValid && specialCharValid) {
+      if (isCaptchaEnabled && !captchaToken) {
+        setState({
+          loading: false,
+          alertType: "warning",
+          alertMsg: "Please complete the captcha."
+        });
+        setTimeout(() => setState((prev) => ({ ...prev, alertMsg: "" })), 2000);
+        return;
+      }
+
       clearStorage();
       setState({ loading: true });
       const userDetails = {
@@ -102,10 +120,11 @@ const Signup = () => {
         user.set("password", password);
         user.set("phone", phone);
         user.set("username", email);
-        let res = user.save();
+        let res = user.save(null, { context: { captchaToken } });
         res
           .then(async (r) => {
             if (r) {
+              await Parse.User.become(r.getSessionToken());
               let roleData = appInfo.settings;
               if (roleData && roleData.length > 0) {
                 const params = {
@@ -140,6 +159,7 @@ const Signup = () => {
             }
           })
           .catch(async (err) => {
+            resetCaptcha();
             if (err.code === 202) {
               const params = { email: email };
               const res = await Parse.Cloud.run("getUserDetails", params);
@@ -168,6 +188,7 @@ const Signup = () => {
             }
           });
       } catch (error) {
+        resetCaptcha();
         console.log("err ", error);
       }
     }
@@ -517,6 +538,10 @@ const Signup = () => {
                       </div>
                     </div>
                   </div>
+                  <Captcha
+                    onVerify={setCaptchaToken}
+                    resetKey={captchaResetKey}
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-center text-xs font-bold mt-2">
                     <button
                       type="submit"

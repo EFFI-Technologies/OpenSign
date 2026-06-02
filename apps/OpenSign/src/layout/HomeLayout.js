@@ -215,7 +215,8 @@ const HomeLayout = () => {
       },
       {
         headers: {
-          "X-Parse-Application-Id": appId
+          "X-Parse-Application-Id": appId,
+          "X-Parse-Session-Token": localStorage.getItem("accesstoken")
         }
       }
     );

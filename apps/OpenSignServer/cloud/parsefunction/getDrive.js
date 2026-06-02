@@ -1,20 +1,14 @@
 import axios from 'axios';
 import { cloudServerUrl } from '../../Utils.js';
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function getDrive(request) {
   const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
-  const appId = process.env.APP_ID;
   const limit = request.params.limit;
   const skip = request.params.skip;
   const classUrl = serverUrl + '/classes/contracts_Document';
   const docId = request.params.docId;
   try {
-    const userRes = await axios.get(serverUrl + '/users/me', {
-      headers: {
-        'X-Parse-Application-Id': appId,
-        'X-Parse-Session-Token': request.headers['sessiontoken'],
-      },
-    });
-    const userId = userRes.data && userRes.data.objectId;
+    const userId = await requireSessionUserId(request);
     if (userId) {
       let url;
       if (docId) {
@@ -44,7 +38,7 @@ export default async function getDrive(request) {
     }
   } catch (err) {
     console.log('err', err);
-    if (err.code == 209) {
+    if (err.code === Parse.Error.INVALID_SESSION_TOKEN) {
       return { error: 'Invalid session token' };
     } else {
       return { error: "You don't have access!" };

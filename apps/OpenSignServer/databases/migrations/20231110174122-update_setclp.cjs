@@ -1,3 +1,5 @@
+const { classLevelPermissions } = require('../../security/parseClassLevelPermissions.cjs');
+
 /**
  *
  * @param {Parse} Parse
@@ -20,7 +22,8 @@ exports.up = async Parse => {
     .addString('Email')
     .addPointer('CreatedBy', '_User')
     .addPointer('ExtUserPtr', 'contracts_Users')
-    .addBoolean('IsDeleted', false);
+    .addBoolean('IsDeleted', false)
+    .setCLP(classLevelPermissions.contracts_Contactbook);
   await contactbook.save(null, { useMasterKey: true });
 
   const extUsers = new Parse.Schema('contracts_Users');
@@ -39,15 +42,7 @@ exports.up = async Parse => {
     .addPointer('CreatedBy', '_User')
     .addString('Webhook')
     .addBoolean('ShareWithTeam', false)
-    .setCLP({
-      get: {},
-      find: {},
-      count: {},
-      create: { '*': true },
-      update: { '*': true },
-      delete: {},
-      addField: {},
-    });
+    .setCLP(classLevelPermissions.contracts_Users);
   await extUsers.save(null, { useMasterKey: true });
 
   const doc = new Parse.Schema('contracts_Document');
@@ -68,16 +63,21 @@ exports.up = async Parse => {
     .addDate('ExpiryDate')
     .addBoolean('SendinOrder', false)
     .addBoolean('AutomaticReminders', false)
+    .addDate('NextReminderDate')
     .addBoolean('IsCompleted', false)
     .addBoolean('IsDeclined', false)
     .addNumber('RemindOnceInEvery', 5)
     .addNumber('TimeToCompleteDays', 15)
     .addBoolean('SentToOthers', false) // check once
+    .addBoolean('IsSendMail')
+    .addDate('DocSentAt')
     .addBoolean('EnablePhoneOTP', false)
     .addDate('AgreementValidUntil')
     .addArray('Recipients')
     .addArray('Clauses')
-    .addArray('AgreementDelta');
+    .addArray('AgreementDelta')
+    .addString('CertificateUrl')
+    .setCLP(classLevelPermissions.contracts_Document);
   await doc.save(null, { useMasterKey: true });
 
   const signature = new Parse.Schema('contracts_Signature');
@@ -89,14 +89,16 @@ exports.up = async Parse => {
     .addString('InitialsText')
     .addString('InitialsFont')
     .addString('Initials')
-    .addPointer('UserId', '_User');
+    .addPointer('UserId', '_User')
+    .setCLP(classLevelPermissions.contracts_Signature);
   await signature.save(null, { useMasterKey: true });
 
   const partners_DataFiles = new Parse.Schema('partners_DataFiles');
   partners_DataFiles
     .addNumber('FileSize')
     .addString('FileUrl')
-    .addPointer('TenantPtr', 'partners_Tenant');
+    .addPointer('TenantPtr', 'partners_Tenant')
+    .setCLP(classLevelPermissions.partners_DataFiles);
   await partners_DataFiles.save(null, { useMasterKey: true });
 
   const partners_Tenant = new Parse.Schema('partners_Tenant');
@@ -108,11 +110,15 @@ exports.up = async Parse => {
     .addString('EmailAddress')
     .addPointer('CreatedBy', '_User')
     .addString('Domain')
-    .addString('Logo');
+    .addString('Logo')
+    .setCLP(classLevelPermissions.partners_Tenant);
   await partners_Tenant.save(null, { useMasterKey: true });
 
   const partners_TenantCredits = new Parse.Schema('partners_TenantCredits');
-  partners_TenantCredits.addPointer('PartnersTenant', 'partners_Tenant').addNumber('usedStorage');
+  partners_TenantCredits
+    .addPointer('PartnersTenant', 'partners_Tenant')
+    .addNumber('usedStorage')
+    .setCLP(classLevelPermissions.partners_TenantCredits);
   return partners_TenantCredits.save(null, { useMasterKey: true });
 };
 

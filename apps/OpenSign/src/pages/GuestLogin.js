@@ -13,6 +13,7 @@ import Parse from "parse";
 import Loader from "../primitives/Loader";
 import { useTranslation } from "react-i18next";
 import SelectLanguage from "../components/pdf/SelectLanguage";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 function GuestLogin() {
   const { t, i18n } = useTranslation();
@@ -28,10 +29,17 @@ function GuestLogin() {
   const [contactId, setContactId] = useState(contactBookId);
   const [sendmail, setSendmail] = useState();
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
   const navigateToDoc = async (docId, contactId) => {
     try {
       const docDetails = await Parse.Cloud.run("getDocument", {
-        docId: docId
+        docId: docId,
+        contactId: contactId
       });
       if (!docDetails.error) {
         if (sendmail === "false") {
@@ -109,16 +117,26 @@ function GuestLogin() {
   //send email OTP function
   const SendOtp = async () => {
     setLoading(true);
-    setEmail(email);
+    if (isCaptchaEnabled && !captchaToken) {
+      setLoading(false);
+      alert("Please complete the captcha.");
+      return;
+    }
+    const recipient = email || contact.email;
+    setEmail(recipient);
     try {
-      const params = { email: email.toString(), docId: documentId };
-      const Otp = await Parse.Cloud.run("SendOTPMailV1", params);
+      const params = { email: recipient.toString(), docId: documentId };
+      const Otp = await Parse.Cloud.run("SendOTPMailV1", params, {
+        context: { captchaToken }
+      });
       if (Otp) {
-        setLoading(false);
         setEnterOtp(true);
       }
     } catch (error) {
       alert(t("something-went-wrong-mssg"));
+    } finally {
+      setLoading(false);
+      resetCaptcha();
     }
   };
 
@@ -142,16 +160,18 @@ function GuestLogin() {
           "Content-Type": "application/json",
           "X-Parse-Application-Id": parseId
         };
-        let body = { email: email, otp: OTP };
+        let body = { email: email, otp: OTP, docId: documentId };
         let user = await axios.post(url, body, { headers: headers });
-        if (user.data.result === "Invalid Otp") {
+        const loginResult = user.data.result;
+        if (
+          !loginResult ||
+          typeof loginResult === "string" ||
+          loginResult.error
+        ) {
           alert(t("invalid-otp"));
           setLoading(false);
-        } else if (user.data.result === "user not found!") {
-          alert(t("user-not-found"));
-          setLoading(false);
         } else {
-          let _user = user.data.result;
+          let _user = loginResult;
           await Parse.User.become(_user.sessionToken);
           const parseId = localStorage.getItem("parseAppId");
           const contractUserDetails = await contractUsers();
@@ -189,6 +209,10 @@ function GuestLogin() {
   };
   const handleUserData = async (e) => {
     e.preventDefault();
+    if (isCaptchaEnabled && !captchaToken) {
+      alert("Please complete the captcha.");
+      return;
+    }
     const params = { ...contact, docId: documentId };
     try {
       setLoading(true);
@@ -243,6 +267,10 @@ function GuestLogin() {
                         disabled
                       />
                     </div>
+                    <Captcha
+                      onVerify={setCaptchaToken}
+                      resetKey={captchaResetKey}
+                    />
                     <div className="mt-3">
                       <button
                         className="op-btn op-btn-primary"
@@ -350,6 +378,10 @@ function GuestLogin() {
                       disabled={loading}
                     />
                   </div>
+                  <Captcha
+                    onVerify={setCaptchaToken}
+                    resetKey={captchaResetKey}
+                  />
                   <div className="mt-2 flex justify-start">
                     <button
                       type="submit"

@@ -1,15 +1,7 @@
-import axios from 'axios';
-import { cloudServerUrl } from '../../Utils.js';
+import { requireSessionUserId } from '../../security/parseSessionAuth.js';
 export default async function savewebhook(request) {
-  const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
   try {
-    const userRes = await axios.get(serverUrl + '/users/me', {
-      headers: {
-        'X-Parse-Application-Id': process.env.APP_ID,
-        'X-Parse-Session-Token': request.headers['sessiontoken'],
-      },
-    });
-    const userId = userRes.data && userRes.data.objectId;
+    const userId = await requireSessionUserId(request);
     const contractuser = new Parse.Query('contracts_Users');
     contractuser.equalTo('UserId', { __type: 'Pointer', className: '_User', objectId: userId });
     const user = await contractuser.first({ useMasterKey: true });

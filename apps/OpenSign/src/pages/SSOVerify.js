@@ -98,6 +98,7 @@ const SSOVerify = () => {
     if (userDetails.Destination && userDetails.Company && phone) {
       const payload = { sessionToken: localStorage.getItem("accesstoken") };
       if (payload && payload.sessionToken) {
+        await Parse.User.become(payload.sessionToken);
         const params = {
           userDetails: {
             name: userDetails.name,

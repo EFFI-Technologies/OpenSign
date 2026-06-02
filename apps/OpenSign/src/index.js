@@ -18,6 +18,7 @@ import TagManager from "react-gtm-module";
 import Parse from "parse";
 import "./polyfills";
 import { serverUrl_fn } from "./constant/appinfo";
+import { installAxiosParseAuth } from "./constant/axiosAuth";
 import "./i18n";
 
 const appId = process.env.REACT_APP_APPID
@@ -26,6 +27,7 @@ const appId = process.env.REACT_APP_APPID
 const serverUrl = serverUrl_fn();
 Parse.initialize(appId);
 Parse.serverURL = serverUrl;
+installAxiosParseAuth();
 
 const HTML5toTouch = {
   backends: [

@@ -1,8 +1,71 @@
-import axios from 'axios';
-import { cloudServerUrl } from '../../Utils.js';
-const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
-const APPID = process.env.APP_ID;
-const masterKEY = process.env.MASTER_KEY;
+import { requireSessionUser } from '../../security/parseSessionAuth.js';
+import { findUserByEmail, normalizeEmail } from './userLookup.js';
+
+const ADMIN_ROLE = 'contracts_Admin';
+
+function requireField(value, fieldName) {
+  const sanitized = String(value || '').trim();
+  if (!sanitized) {
+    throw new Parse.Error(Parse.Error.VALIDATION_ERROR, `${fieldName} is required.`);
+  }
+  return sanitized;
+}
+
+function getUserDetails(request) {
+  const rawUserDetails = request.params?.userDetails || {};
+  return {
+    ...rawUserDetails,
+    name: requireField(rawUserDetails.name, 'Name'),
+    email: normalizeEmail(requireField(rawUserDetails.email, 'Email')),
+    company: requireField(rawUserDetails.company, 'Company'),
+    phone: rawUserDetails.phone ? String(rawUserDetails.phone).trim() : '',
+    jobTitle: rawUserDetails.jobTitle ? String(rawUserDetails.jobTitle).trim() : '',
+    password: rawUserDetails.password,
+    role: ADMIN_ROLE,
+  };
+}
+
+async function hasActiveAdmin() {
+  const extUserQuery = new Parse.Query('contracts_Users');
+  extUserQuery.equalTo('UserRole', ADMIN_ROLE);
+  extUserQuery.notEqualTo('IsDisabled', true);
+  extUserQuery.exists('OrganizationId');
+  const extUser = await extUserQuery.first({ useMasterKey: true });
+  return Boolean(extUser);
+}
+
+async function requireAdminUser(request, userDetails, requestUser) {
+  const user = requestUser || (await requireSessionUser(request));
+  const adminExists = await hasActiveAdmin();
+  const currentEmail = normalizeEmail(user.get('email') || user.get('username'));
+
+  if (!adminExists) {
+    if (!currentEmail || currentEmail !== userDetails.email) {
+      throw new Parse.Error(
+        Parse.Error.OPERATION_FORBIDDEN,
+        'Only the authenticated signup user can create the first admin.'
+      );
+    }
+    return user;
+  }
+
+  const extUserQuery = new Parse.Query('contracts_Users');
+  extUserQuery.equalTo('UserId', {
+    __type: 'Pointer',
+    className: '_User',
+    objectId: user.id,
+  });
+  extUserQuery.equalTo('UserRole', ADMIN_ROLE);
+  extUserQuery.notEqualTo('IsDisabled', true);
+  const extUser = await extUserQuery.first({ useMasterKey: true });
+
+  if (!extUser) {
+    throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Admin privileges are required.');
+  }
+
+  return user;
+}
+
 async function addTeamAndOrg(extUser) {
   try {
     const orgCls = new Parse.Object('contracts_Organizations');
@@ -36,7 +99,7 @@ async function addTeamAndOrg(extUser) {
     const teamRes = await teamCls.save(null, { useMasterKey: true });
     const updateUser = new Parse.Object('contracts_Users');
     updateUser.id = extUser.objectId;
-    updateUser.set('UserRole', 'contracts_Admin');
+    updateUser.set('UserRole', ADMIN_ROLE);
     updateUser.set('OrganizationId', {
       __type: 'Pointer',
       className: 'contracts_Organizations',
@@ -49,35 +112,22 @@ async function addTeamAndOrg(extUser) {
         objectId: teamRes.id,
       },
     ]);
-    const extUserRes = await updateUser.save(null, { useMasterKey: true });
+    await updateUser.save(null, { useMasterKey: true });
   } catch (err) {
     console.log('err in add team, role, org', err);
+    throw err;
   }
 }
 
 async function saveUser(userDetails) {
-  const userQuery = new Parse.Query(Parse.User);
-  userQuery.equalTo('username', userDetails.email);
-  const userRes = await userQuery.first({ useMasterKey: true });
+  const userRes = await findUserByEmail(userDetails.email);
 
   if (userRes) {
-    const url = `${serverUrl}/loginAs`;
-    const axiosRes = await axios({
-      method: 'POST',
-      url: url,
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        'X-Parse-Application-Id': APPID,
-        'X-Parse-Master-Key': masterKEY,
-      },
-      params: {
-        userId: userRes.id,
-      },
-    });
-    const login = await axiosRes.data;
-    // console.log("login ", login);
-    return { id: login.objectId, sessionToken: login.sessionToken };
+    return { id: userRes.id };
   } else {
+    if (!userDetails.password) {
+      throw new Parse.Error(Parse.Error.VALIDATION_ERROR, 'Password is required.');
+    }
     const user = new Parse.User();
     user.set('username', userDetails.email);
     user.set('password', userDetails.password);
@@ -89,11 +139,14 @@ async function saveUser(userDetails) {
 
     const res = await user.signUp();
     // console.log("res ", res);
-    return { id: res.id, sessionToken: res.getSessionToken() };
+    return { id: res.id };
   }
 }
 export default async function AddAdmin(request) {
-  const userDetails = request.params.userDetails;
+  const requestUser = await requireSessionUser(request);
+  const userDetails = getUserDetails(request);
+  await requireAdminUser(request, userDetails, requestUser);
+
   // const subscription = request.params.subscription;
   const user = await saveUser(userDetails);
 
@@ -150,7 +203,7 @@ export default async function AddAdmin(request) {
         className: '_User',
         objectId: user.id,
       });
-      newObj.set('UserRole', userDetails.role);
+      newObj.set('UserRole', ADMIN_ROLE);
       newObj.set('Email', userDetails.email);
       newObj.set('Name', userDetails.name);
       if (userDetails?.phone) {
@@ -176,16 +229,19 @@ export default async function AddAdmin(request) {
         Phone: userDetails?.phone ? userDetails.phone : '',
         TenantId: { objectId: tenantRes.id },
         UserId: { objectId: user.id },
-        UserRole: userDetails.role,
+        UserRole: ADMIN_ROLE,
         Company: userDetails.company,
         JobTitle: userDetails.jobTitle,
       };
       await addTeamAndOrg(extUser);
       // await saveSubscription(extRes.id, user.id, tenantRes.id, subscription);
       // }
-      return { message: 'User sign up', sessionToken: user.sessionToken };
+      return { message: 'User sign up' };
     }
   } catch (err) {
     console.log('Err ', err);
+    const code = err?.code || 400;
+    const message = err?.message || 'Something went wrong.';
+    throw new Parse.Error(code, message);
   }
 }

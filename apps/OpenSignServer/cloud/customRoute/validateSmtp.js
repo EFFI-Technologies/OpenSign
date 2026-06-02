@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { createTransport } from 'nodemailer';
 import { appName } from '../../Utils.js';
 // Online Javascript Editor for free
@@ -9,7 +10,7 @@ function generateOtpWithSum10() {
 
   // First, generate 3 random digits (0-9) and add them to the sum
   for (let i = 0; i < 3; i++) {
-    let digit = Math.floor(Math.random() * 10);
+    let digit = crypto.randomInt(0, 10);
     otp.push(digit);
     sum += digit;
   }

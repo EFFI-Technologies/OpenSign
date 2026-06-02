@@ -20,7 +20,7 @@ export default async function getSigners(request) {
         contactbook.matches('Email', new RegExp(searchEmail, 'i'));
       }
       contactbook.notEqualTo('IsDeleted', true);
-      const contactRes = await contactbook.find();
+      const contactRes = await contactbook.find({ useMasterKey: true });
       const _contactRes = JSON.parse(JSON.stringify(contactRes));
       return _contactRes;
     } else if (jwttoken) {

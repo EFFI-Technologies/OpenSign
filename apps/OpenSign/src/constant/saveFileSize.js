@@ -4,6 +4,18 @@ const parseAppId = process.env.REACT_APP_APPID
   ? process.env.REACT_APP_APPID
   : "effisign";
 const serverUrl = serverUrl_fn();
+const parseHeaders = () => {
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Parse-Application-Id": parseAppId
+  };
+  const sessionToken = localStorage.getItem("accesstoken");
+  if (sessionToken) {
+    headers["X-Parse-Session-Token"] = sessionToken;
+  }
+  return headers;
+};
+
 export const SaveFileSize = async (size, imageUrl, tenantId) => {
   //checking server url and save file's size
   const tenantPtr = {
@@ -16,10 +28,7 @@ export const SaveFileSize = async (size, imageUrl, tenantId) => {
     const res = await axios.get(
       `${serverUrl}/classes/partners_TenantCredits?where={"PartnersTenant":${_tenantPtr}}`,
       {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Parse-Application-Id": parseAppId
-        }
+        headers: parseHeaders()
       }
     );
     const response = res.data.results;
@@ -35,19 +44,13 @@ export const SaveFileSize = async (size, imageUrl, tenantId) => {
         `${serverUrl}/classes/partners_TenantCredits/${response[0].objectId}`,
         data,
         {
-          headers: {
-            "Content-Type": "application/json",
-            "X-Parse-Application-Id": parseAppId
-          }
+          headers: parseHeaders()
         }
       );
     } else {
       data = { usedStorage: size, PartnersTenant: tenantPtr };
       await axios.post(`${serverUrl}/classes/partners_TenantCredits`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Parse-Application-Id": parseAppId
-        }
+        headers: parseHeaders()
       });
     }
   } catch (err) {
@@ -67,10 +70,7 @@ const saveDataFile = async (size, imageUrl, tenantPtr) => {
   // console.log("data save",file, data)
   try {
     await axios.post(`${serverUrl}/classes/partners_DataFiles`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-Parse-Application-Id": parseAppId
-      }
+      headers: parseHeaders()
     });
   } catch (err) {
     console.log("err in save usage ", err);

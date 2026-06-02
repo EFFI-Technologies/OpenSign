@@ -1,55 +1,52 @@
-import axios from 'axios';
-import { cloudServerUrl, planCredits } from '../../Utils.js';
-const serverUrl = cloudServerUrl; //process.env.SERVER_URL;
-const APPID = process.env.APP_ID;
-const masterKEY = process.env.MASTER_KEY;
+import { planCredits } from '../../Utils.js';
+import { getRequestSessionToken, requireSessionUser } from '../../security/parseSessionAuth.js';
+import { normalizeEmail } from './userLookup.js';
 
-async function saveUser(userDetails) {
-  const userQuery = new Parse.Query(Parse.User);
-  userQuery.equalTo('username', userDetails.email);
-  const userRes = await userQuery.first({ useMasterKey: true });
+const PUBLIC_SIGNUP_ROLE = 'contracts_User';
 
-  if (userRes) {
-    const url = `${serverUrl}/loginAs`;
-    const axiosRes = await axios({
-      method: 'POST',
-      url: url,
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        'X-Parse-Application-Id': APPID,
-        'X-Parse-Master-Key': masterKEY,
-      },
-      params: {
-        userId: userRes.id,
-      },
-    });
-    const login = await axiosRes.data;
-    // console.log("login ", login);
-    return { id: login.objectId, sessionToken: login.sessionToken };
-  } else {
-    const user = new Parse.User();
-    user.set('username', userDetails.email);
-    user.set('password', userDetails.password);
-    user.set('email', userDetails.email);
-    if (userDetails?.phone) {
-      user.set('phone', userDetails.phone);
-    }
-    user.set('name', userDetails.name);
-
-    const res = await user.signUp();
-    // console.log("res ", res);
-    return { id: res.id, sessionToken: res.getSessionToken() };
+function requireField(value, fieldName) {
+  const sanitized = String(value || '').trim();
+  if (!sanitized) {
+    throw new Parse.Error(Parse.Error.VALIDATION_ERROR, `${fieldName} is required.`);
   }
+  return sanitized;
 }
+
+async function getSignupUser(request, userDetails, sessionUser) {
+  const requestUser = sessionUser || (await requireSessionUser(request));
+  const requestedEmail = normalizeEmail(userDetails.email);
+  const userEmail = normalizeEmail(requestUser.get('email') || requestUser.get('username'));
+
+  if (!requestedEmail || requestedEmail !== userEmail) {
+    throw new Parse.Error(
+      Parse.Error.INVALID_SESSION_TOKEN,
+      'Signup user must match the authenticated session.'
+    );
+  }
+
+  return {
+    id: requestUser.id,
+    sessionToken: getRequestSessionToken(request.headers) || requestUser.getSessionToken?.(),
+  };
+}
+
 export default async function usersignup(request) {
-  const userDetails = request.params.userDetails;
-  const subscription = request.params.subscription;
-  const user = await saveUser(userDetails);
+  const sessionUser = await requireSessionUser(request);
+  const rawUserDetails = request.params?.userDetails || {};
+  const userDetails = {
+    ...rawUserDetails,
+    name: requireField(rawUserDetails.name, 'Name'),
+    email: normalizeEmail(requireField(rawUserDetails.email, 'Email')),
+    company: requireField(rawUserDetails.company, 'Company'),
+    phone: rawUserDetails.phone ? String(rawUserDetails.phone).trim() : '',
+    jobTitle: rawUserDetails.jobTitle ? String(rawUserDetails.jobTitle).trim() : '',
+    role: PUBLIC_SIGNUP_ROLE,
+  };
+  const subscription = request.params?.subscription;
+  const user = await getSignupUser(request, userDetails, sessionUser);
 
   try {
-    const extClass = userDetails.role.split('_')[0];
-
-    const extQuery = new Parse.Query(extClass + '_Users');
+    const extQuery = new Parse.Query('contracts_Users');
     extQuery.equalTo('UserId', {
       __type: 'Pointer',
       className: '_User',
@@ -95,8 +92,7 @@ export default async function usersignup(request) {
       }
       const tenantRes = await partnerQuery.save(null, { useMasterKey: true });
       // console.log("tenantRes ", tenantRes);
-      const extCls = Parse.Object.extend(extClass + '_Users');
-      const newObj = new extCls();
+      const newObj = new Parse.Object('contracts_Users');
       newObj.set('UserId', {
         __type: 'Pointer',
         className: '_User',
@@ -127,6 +123,9 @@ export default async function usersignup(request) {
     }
   } catch (err) {
     console.log('Err ', err);
+    const code = err?.code || 400;
+    const message = err?.message || 'Something went wrong.';
+    throw new Parse.Error(code, message);
   }
 }
 

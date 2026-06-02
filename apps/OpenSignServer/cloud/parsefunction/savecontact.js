@@ -1,10 +1,12 @@
 import { parseJwt } from '../../Utils.js';
 import jwt from 'jsonwebtoken';
+import { getUserIdByEmail, normalizeEmail } from './userLookup.js';
+import { generateGuestPassword } from './userProvisioning.js';
 
 export default async function savecontact(request) {
   const name = request.params.name;
   const phone = request.params.phone;
-  const email = request.params.email;
+  const email = normalizeEmail(request.params.email);
   const tenantId = request.params.tenantId;
   const jwttoken = request.headers.jwttoken;
 
@@ -15,7 +17,7 @@ export default async function savecontact(request) {
     query.equalTo('CreatedBy', currentUserPtr);
     query.notEqualTo('IsDeleted', true);
     query.equalTo('Email', email);
-    const res = await query.first();
+    const res = await query.first({ useMasterKey: true });
     if (!res) {
       const contactQuery = new Parse.Object('contracts_Contactbook');
       contactQuery.set('Name', name);
@@ -39,7 +41,7 @@ export default async function savecontact(request) {
         _user.set('name', name);
         _user.set('username', email);
         _user.set('email', email);
-        _user.set('password', email);
+        _user.set('password', generateGuestPassword());
         if (phone) {
           _user.set('phone', phone);
         }
@@ -55,20 +57,22 @@ export default async function savecontact(request) {
           acl.setWriteAccess(currentUser.id, true);
           contactQuery.setACL(acl);
 
-          const res = await contactQuery.save();
+          const res = await contactQuery.save(null, { useMasterKey: true });
           const parseData = JSON.parse(JSON.stringify(res));
           return parseData;
         }
       } catch (err) {
         console.log('err ', err);
         if (err.code === 202) {
-          const params = { email: email };
-          const userRes = await Parse.Cloud.run('getUserId', params);
+          const userId = await getUserIdByEmail(email);
+          if (!userId) {
+            throw err;
+          }
           contactQuery.set('CreatedBy', currentUserPtr);
           contactQuery.set('UserId', {
             __type: 'Pointer',
             className: '_User',
-            objectId: userRes.id,
+            objectId: userId,
           });
           const acl = new Parse.ACL();
           acl.setPublicReadAccess(true);
@@ -76,7 +80,7 @@ export default async function savecontact(request) {
           acl.setReadAccess(currentUser.id, true);
           acl.setWriteAccess(currentUser.id, true);
           contactQuery.setACL(acl);
-          const res = await contactQuery.save();
+          const res = await contactQuery.save(null, { useMasterKey: true });
           const parseData = JSON.parse(JSON.stringify(res));
           return parseData;
         }
@@ -105,7 +109,7 @@ export default async function savecontact(request) {
       query.equalTo('CreatedBy', currentUserPtr);
       query.notEqualTo('IsDeleted', true);
       query.equalTo('Email', email);
-      const res = await query.first();
+      const res = await query.first({ useMasterKey: true });
       if (!res) {
         const contactQuery = new Parse.Object('contracts_Contactbook');
         contactQuery.set('Name', name);
@@ -128,7 +132,7 @@ export default async function savecontact(request) {
           _user.set('name', name);
           _user.set('username', email);
           _user.set('email', email);
-          _user.set('password', email);
+          _user.set('password', generateGuestPassword());
           if (phone) {
             _user.set('phone', phone);
           }
@@ -144,20 +148,22 @@ export default async function savecontact(request) {
             acl.setWriteAccess(currentUser.id, true);
             contactQuery.setACL(acl);
 
-            const res = await contactQuery.save();
+            const res = await contactQuery.save(null, { useMasterKey: true });
             const parseData = JSON.parse(JSON.stringify(res));
             return parseData;
           }
         } catch (err) {
           console.log('err ', err);
           if (err.code === 202) {
-            const params = { email: email };
-            const userRes = await Parse.Cloud.run('getUserId', params);
+            const existingUserId = await getUserIdByEmail(email);
+            if (!existingUserId) {
+              throw err;
+            }
             contactQuery.set('CreatedBy', currentUserPtr);
             contactQuery.set('UserId', {
               __type: 'Pointer',
               className: '_User',
-              objectId: userRes.id,
+              objectId: existingUserId,
             });
             const acl = new Parse.ACL();
             acl.setPublicReadAccess(true);
@@ -165,7 +171,7 @@ export default async function savecontact(request) {
             acl.setReadAccess(currentUser.id, true);
             acl.setWriteAccess(currentUser.id, true);
             contactQuery.setACL(acl);
-            const res = await contactQuery.save();
+            const res = await contactQuery.save(null, { useMasterKey: true });
             const parseData = JSON.parse(JSON.stringify(res));
             return parseData;
           }

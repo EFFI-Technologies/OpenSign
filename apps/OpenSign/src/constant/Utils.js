@@ -599,7 +599,11 @@ export const signPdfFun = async (
   let isCustomCompletionMail = false;
   try {
     //get tenant details
-    const tenantDetails = await getTenantDetails(objectId);
+    const tenantDetails = await getTenantDetails(
+      objectId,
+      undefined,
+      documentId
+    );
     if (tenantDetails && tenantDetails === "user does not exist!") {
       return { status: "error", message: "User does not exist." };
     } else {
@@ -1780,8 +1784,12 @@ export const contactBook = async (objectId) => {
 };
 
 //function for getting document details from contract_Documents class
-export const contractDocument = async (documentId, JwtToken) => {
-  const data = { docId: documentId };
+export const contractDocument = async (
+  documentId,
+  JwtToken,
+  contactId = ""
+) => {
+  const data = { docId: documentId, contactId };
   const token = JwtToken
     ? { jwtToken: JwtToken }
     : { sessionToken: localStorage.getItem("accesstoken") };
@@ -1990,7 +1998,7 @@ export const getAppLogo = async () => {
   }
 };
 
-export const getTenantDetails = async (objectId, jwttoken) => {
+export const getTenantDetails = async (objectId, jwttoken, docId) => {
   try {
     const url = `${localStorage.getItem("baseUrl")}functions/gettenant`;
     const parseAppId = localStorage.getItem("parseAppId");
@@ -1998,7 +2006,7 @@ export const getTenantDetails = async (objectId, jwttoken) => {
     const token = jwttoken
       ? { jwttoken: jwttoken }
       : { "X-Parse-Session-Token": accesstoken };
-    const data = jwttoken ? {} : { userId: objectId };
+    const data = jwttoken ? {} : { userId: objectId, docId };
     const res = await axios.post(url, data, {
       headers: {
         "Content-Type": "application/json",
@@ -2072,11 +2080,21 @@ export const convertPdfArrayBuffer = async (url) => {
 export const handleSendOTP = async (email) => {
   try {
     let url = `${localStorage.getItem("baseUrl")}functions/SendOTPMailV1`;
+    const currentUser = Parse.User.current();
+    const currentEmail =
+      currentUser?.getEmail?.() || currentUser?.get?.("email") || "";
+    const recipient = email || currentEmail;
+    const sessionToken =
+      currentUser?.getSessionToken?.() || localStorage.getItem("accesstoken");
+    if (!recipient || !sessionToken) {
+      throw new Error("User is not authenticated.");
+    }
     const headers = {
       "Content-Type": "application/json",
-      "X-Parse-Application-Id": localStorage.getItem("parseAppId")
+      "X-Parse-Application-Id": localStorage.getItem("parseAppId"),
+      "X-Parse-Session-Token": sessionToken
     };
-    const body = { email: email };
+    const body = { email: recipient };
     await axios.post(url, body, { headers: headers });
   } catch (error) {
     alert(error.message);

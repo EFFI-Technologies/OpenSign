@@ -1,19 +1,17 @@
+import { normalizeEmail } from './userLookup.js';
+import { verifyOtpForEmail } from './otpSecurity.js';
+
 export default async function VerifyEmail(request) {
   try {
     if (!request?.user) {
       throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'User is not authenticated.');
     } else {
-      let otpN = request.params.otp;
-      let otp = parseInt(otpN);
-      let email = request.params.email;
+      const otp = request.params.otp;
+      const email = normalizeEmail(request.params.email);
+      const currentEmail = normalizeEmail(request.user.get('email'));
+      const otpResult = currentEmail === email && (await verifyOtpForEmail(email, otp, request));
 
-      //checking otp is correct or not which already save in defaultdata_Otp class
-      const checkOtp = new Parse.Query('defaultdata_Otp');
-      checkOtp.equalTo('Email', email);
-      checkOtp.equalTo('OTP', otp);
-
-      const res = await checkOtp.first({ useMasterKey: true });
-      if (res) {
+      if (otpResult?.ok) {
         // Fetch the user by their objectId
         const isEmailVerified = request?.user?.get('emailVerified');
         if (isEmailVerified) {

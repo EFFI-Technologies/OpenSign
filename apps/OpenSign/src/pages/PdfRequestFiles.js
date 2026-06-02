@@ -51,6 +51,7 @@ import LoaderWithMsg from "../primitives/LoaderWithMsg";
 import DownloadPdfZip from "../primitives/DownloadPdfZip";
 import Loader from "../primitives/Loader";
 import PdfDeclineModal from "../primitives/PdfDeclineModal";
+import Captcha, { isCaptchaEnabled } from "../components/Captcha";
 
 function PdfRequestFiles(props) {
   const { t } = useTranslation();
@@ -130,6 +131,8 @@ function PdfRequestFiles(props) {
   const [isOtp, setIsOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [publicRes, setPublicRes] = useState({});
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [documentId, setDocumentId] = useState("");
   const [isPublicContact, setIsPublicContact] = useState(false);
   const [plancode, setPlanCode] = useState("");
@@ -137,6 +140,10 @@ function PdfRequestFiles(props) {
   const divRef = useRef(null);
   const [isDownloadModal, setIsDownloadModal] = useState(false);
   const isMobile = window.innerWidth < 767;
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaResetKey((key) => key + 1);
+  };
 
   let isGuestSignFlow = false;
   let sendmail;
@@ -412,7 +419,11 @@ function PdfRequestFiles(props) {
       // `currUserId` will be contactId or extUserId
       let currUserId;
       //getting document details
-      const documentData = await contractDocument(docId);
+      const documentData = await contractDocument(
+        docId,
+        undefined,
+        contactBookId
+      );
       if (documentData && documentData.length > 0) {
         const url =
           documentData[0] &&
@@ -569,7 +580,8 @@ function PdfRequestFiles(props) {
                 openSignUrl +
                 " target=_blank>here</a> </p></div></div></body></html>"
             };
-            if (localStorage &&
+            if (
+              localStorage &&
               !localStorage.getItem(
                 `${currUserId}-${documentData?.[0].objectId}`
               )
@@ -953,7 +965,11 @@ function PdfRequestFiles(props) {
             let pdfArrBuffer;
             //`contractDocument` function used to get updated SignedUrl
             // to resolve issue of widgets get remove automatically when more than 1 signers try to sign doc at a time
-            const documentData = await contractDocument(documentId);
+            const documentData = await contractDocument(
+              documentId,
+              undefined,
+              contactBookId || signerObjectId
+            );
             if (documentData && documentData.length > 0) {
               const url = documentData[0]?.SignedUrl || documentData[0]?.URL;
               //convert document url in array buffer format to use embed widgets in pdf using pdf-lib
@@ -1589,6 +1605,12 @@ function PdfRequestFiles(props) {
   //`handlePublicUser` function to use create user from public role and create document from public template
   const handlePublicUser = async (e) => {
     e.preventDefault();
+    const isEnableOTP = pdfDetails?.[0]?.IsEnableOTP || false;
+    if (isEnableOTP && isCaptchaEnabled && !captchaToken) {
+      alert("Please complete the captcha.");
+      return;
+    }
+
     setLoading(true);
     try {
       const params = {
@@ -1611,9 +1633,8 @@ function PdfRequestFiles(props) {
 
       if (userRes?.data?.result) {
         setPublicRes(userRes.data.result);
-        const isEnableOTP = pdfDetails?.[0]?.IsEnableOTP || false;
         if (isEnableOTP) {
-          await SendOtp();
+          await SendOtp(userRes.data.result?.docId);
         } else {
           setIsPublicContact(false);
           setIsPublicTemplate(false);
@@ -1660,9 +1681,19 @@ function PdfRequestFiles(props) {
     setContact({ ...contact, [name]: value });
   };
 
-  const SendOtp = async () => {
+  const SendOtp = async (docId = publicRes?.docId) => {
+    if (isCaptchaEnabled && !captchaToken) {
+      setLoading(false);
+      alert("Please complete the captcha.");
+      return;
+    }
+
     try {
-      const params = { email: contact.email, docId: publicRes?.docId };
+      const params = {
+        email: contact.email,
+        docId,
+        _context: { captchaToken }
+      };
       const Otp = await axios.post(
         `${localStorage.getItem("baseUrl")}/functions/SendOTPMailV1`,
         params,
@@ -1685,6 +1716,8 @@ function PdfRequestFiles(props) {
         isShow: true,
         alertMessage: t("something-went-wrong-mssg")
       });
+    } finally {
+      resetCaptcha();
     }
   };
 
@@ -1704,16 +1737,18 @@ function PdfRequestFiles(props) {
           "Content-Type": "application/json",
           "X-Parse-Application-Id": parseId
         };
-        let body = { email: contact.email, otp: otp };
+        let body = { email: contact.email, otp: otp, docId: publicRes?.docId };
         let user = await axios.post(url, body, { headers: headers });
-        if (user.data.result === "Invalid Otp") {
+        const loginResult = user.data.result;
+        if (
+          !loginResult ||
+          typeof loginResult === "string" ||
+          loginResult.error
+        ) {
           alert(t("invalid-otp"));
           setLoading(false);
-        } else if (user.data.result === "user not found!") {
-          alert(t("user-not-found"));
-          setLoading(false);
         } else {
-          let _user = user.data.result;
+          let _user = loginResult;
           const parseId = localStorage.getItem("parseAppId");
           await Parse.User.become(_user.sessionToken);
           const contractUserDetails = await contractUsers();
@@ -1748,6 +1783,7 @@ function PdfRequestFiles(props) {
     setLoading(false);
     setIsOtp(false);
     setOtp();
+    resetCaptcha();
     setContact({ name: "", email: "", phone: "" });
   };
 
@@ -1983,6 +2019,13 @@ function PdfRequestFiles(props) {
                             className="op-input op-input-bordered op-input-sm focus:outline-none hover:border-base-content w-full text-xs"
                           />
                         </div>
+
+                        {pdfDetails?.[0]?.IsEnableOTP && (
+                          <Captcha
+                            onVerify={setCaptchaToken}
+                            resetKey={captchaResetKey}
+                          />
+                        )}
 
                         <div className="mt-6 flex justify-start gap-2">
                           <button
