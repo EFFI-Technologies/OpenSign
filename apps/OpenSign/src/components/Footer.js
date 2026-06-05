@@ -1,22 +1,8 @@
 import React, { useEffect, useState } from "react";
-import Package from "../../package.json";
-import axios from "axios";
-import { openInNewTab } from "../constant/Utils";
 import { useTranslation } from "react-i18next";
 const Footer = () => {
   const { t } = useTranslation();
   const [showButton, setShowButton] = useState(false);
-  const [version, setVersion] = useState("");
-  useEffect(() => {
-    axios
-      .get("/version.txt")
-      .then((response) => {
-        setVersion(response.data); // Set the retrieved data to the state variable
-      })
-      .catch((error) => {
-        console.error("Error reading the file:", error);
-      });
-  }, []);
 
   const handleScroll = () => {
     if (window.pageYOffset >= 50) {
@@ -39,22 +25,20 @@ const Footer = () => {
     };
   }, []);
 
-  const appName = "EffiSign";
-  const openUrl = () => {
-    // openInNewTab(
-    //   "https://github.com/OpenSignLabs/OpenSign/releases/tag/" + version
-    // );
-  };
   return (
     <>
       <footer className="op-footer op-footer-center py-3 bg-base-300 text-base-content text-center text-[13px]">
         <aside>
           <p>
-            {t("all-right")} &copy; {new Date().getFullYear()} &nbsp;
-            <span onClick={openUrl} className="hover:underline cursor-pointer">
-              {appName} ( {t("version")}:{" "}
-              {version ? version : `${Package.version} `})
-            </span>
+            &copy; {new Date().getFullYear()} EffiSign{" · "}
+            <a
+              href="https://github.com/EFFI-Technologies/OpenSign"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              {t("all-right")}
+            </a>
           </p>
         </aside>
       </footer>
