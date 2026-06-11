@@ -550,7 +550,7 @@
     "Required": "Required",
     "Optional": "Optional"
   },
-  "all-right": "All Rights Reserved",
+  "all-right": "AGPL-3.0",
   "version": "version",
   "social-media": {
     "github": "Github",
