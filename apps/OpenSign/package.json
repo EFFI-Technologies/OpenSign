@@ -122,7 +122,8 @@
   },
   "overrides": {
     "nth-check": "$nth-check",
-    "ws": "$ws"
+    "ws": "$ws",
+    "tar": "^7.5.22"
   },
   "engines": {
     "node": "18 || 20 || 22"
