@@ -110,117 +110,70 @@ jobs:
     name: Build and Deploy Backend (US)
     if: ${{ inputs.region == 'us' || inputs.region == 'both' }}
     runs-on: ubuntu-latest
-    environment:
-      name: production-us
-      url: https://opensign.saas.effi-services.com
     permissions:
       id-token: write
       contents: read
 
-    # Every US-specific value is resolved once here from the `production-us`
-    # GitHub Environment, so no step hardcodes a region, account or service name.
-    #   Required secrets : AWS_REGION, AWS_ECR_ROLE, AWS_ECS_ROLE
-    #   Optional vars    : ECR_ACCOUNT_ID, ECR_REPOSITORY, IMAGE_TAG,
-    #                      ECS_CONTAINER_NAME, ECS_CLUSTER, ECS_SERVICE
+    # Same IAM roles as the AU job. Only the region, the ECR repository region
+    # and the ECS cluster/service differ.
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_ACCOUNT_ID: ${{ vars.ECR_ACCOUNT_ID || '241924812472' }}
-      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'opensign-service-api' }}
-      IMAGE_TAG: ${{ vars.IMAGE_TAG || 'saas-production' }}
-      CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME || 'opensign-service-api-saas-igus-production' }}
-      ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'ECS-Cluster-SAAS-Production' }}
-      ECS_SERVICE: ${{ vars.ECS_SERVICE || 'opensign-service-api-saas-igus-production' }}
-      NODE_ENV: production
+      AWS_REGION: us-east-2
+      REPOSITORY_URI: 241924812472.dkr.ecr.us-east-2.amazonaws.com/opensign-service-api
+      IMAGE_TAG: saas-production
+      CONTAINER_NAME: opensign-service-api-saas-igus-production
+      ECS_CLUSTER: ECS-Cluster-SAAS-Production
+      ECS_SERVICE: opensign-service-api-saas-igus-production
 
     steps:
       # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Fail fast if the production-us environment is not configured
-      - name: Validate US environment configuration
-        env:
-          ECR_ROLE: ${{ secrets.AWS_ECR_ROLE }}
-          ECS_ROLE: ${{ secrets.AWS_ECS_ROLE }}
-        run: |
-          missing=""
-          [ -n "$AWS_REGION" ] || missing="$missing AWS_REGION"
-          [ -n "$ECR_ROLE" ] || missing="$missing AWS_ECR_ROLE"
-          [ -n "$ECS_ROLE" ] || missing="$missing AWS_ECS_ROLE"
-
-          if [ -n "$missing" ]; then
-            echo "::error::Missing production-us environment secrets:$missing"
-            exit 1
-          fi
-
-          echo "Deploying $CONTAINER_NAME:$IMAGE_TAG to $ECS_SERVICE ($AWS_REGION)"
-
-      # Step 3: Set up Docker Buildx
+      # Step 2: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Step 4: Resolve the region-specific ECR repository URI
-      - name: Resolve ECR repository URI
-        run: |
-          REPOSITORY_URI=$ECR_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY
-          echo "REPOSITORY_URI=$REPOSITORY_URI" >> $GITHUB_ENV
-          echo "Using repository $REPOSITORY_URI"
-
-      # Step 5: Build and tag the Docker image with the correct tag
+      # Step 3: Build and tag the Docker image
       - name: Build Docker image
         run: |
-          docker build \
-            --build-arg NODE_ENV=$NODE_ENV \
-            -t $CONTAINER_NAME:$IMAGE_TAG \
-            -f apps/OpenSignServer/Dockerhubfile .
+          docker build             --build-arg NODE_ENV=production             -t $CONTAINER_NAME:$IMAGE_TAG             -f apps/OpenSignServer/Dockerhubfile .
 
           echo "Built and tagged image $CONTAINER_NAME:$IMAGE_TAG"
 
-      # Step 6: Configure AWS credentials for ECR account
+      # Step 4: Configure AWS credentials for ECR account
       - name: Configure AWS credentials for ECR account
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ECR_ROLE }}  # IAM Role ARN for the ECR account
-          aws-region: ${{ secrets.AWS_REGION }}  # US AWS region
+          role-to-assume: arn:aws:iam::241924812472:role/EFFI-GITHUB-CICD-Role  # IAM Role ARN for the ECR account
+          aws-region: ${{ env.AWS_REGION }}  # US AWS region
           role-session-name: GitHub-CI-CD-US-Session  # Custom session name
           role-duration-seconds: 900  # Duration of the session (15 minutes)
 
-      # Step 7: Log in to Amazon ECR
+      # Step 5: Log in to Amazon ECR (the assumed role owns this registry)
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registry-ids: ${{ vars.ECR_ACCOUNT_ID || '241924812472' }}  # AWS Account ID for ECR
 
-      # Step 8: Tag Docker image for ECR
-      - name: Tag Docker image for ECR
-        run: |
-          docker tag $CONTAINER_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
-          echo "Tagged image as $REPOSITORY_URI:$IMAGE_TAG"
-
-      # Step 9: Push Docker image to ECR
+      # Step 6: Tag and push the image to the US ECR repository
       - name: Push Docker image to ECR
         run: |
+          docker tag $CONTAINER_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
           docker push $REPOSITORY_URI:$IMAGE_TAG
           echo "Pushed image to $REPOSITORY_URI:$IMAGE_TAG"
 
-      # Step 10: Configure AWS credentials for ECS account
+      # Step 7: Configure AWS credentials for ECS account
       - name: Configure AWS credentials for ECS account
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ECS_ROLE }}  # IAM Role ARN for the ECS account
-          aws-region: ${{ secrets.AWS_REGION }}  # US AWS region for ECS service
+          role-to-assume: arn:aws:iam::020859241731:role/EFFI-GITHUB-CICD-Role  # IAM Role ARN for the ECS account
+          aws-region: ${{ env.AWS_REGION }}  # US AWS region for ECS service
           role-session-name: GitHub-CI-CD-ECS-US-Session  # Custom session name
           role-duration-seconds: 900  # Duration of the session (15 minutes)
 
-      # Step 11: Force restart ECS service
+      # Step 8: Force restart ECS service
       - name: Force restart ECS service
         run: |
           echo "Force restarting ECS service $ECS_SERVICE in cluster $ECS_CLUSTER"
 
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment \
-            --region $AWS_REGION
+          aws ecs update-service             --cluster $ECS_CLUSTER             --service $ECS_SERVICE             --force-new-deployment             --region $AWS_REGION
 
           echo "ECS service $ECS_SERVICE has been force restarted successfully"
