@@ -125,9 +125,9 @@ jobs:
 
       - name: Validate US environment configuration
         env:
-          BUCKET: ${{ secrets.BUCKET }}
-          AWS_ROLE: ${{ secrets.AWS_PRODUCTION_ROLE }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          BUCKET: ${{ vars.BUCKET }}
+          AWS_ROLE: ${{ vars.AWS_PRODUCTION_ROLE }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
           missing=""
           [ -n "$PUBLIC_URL" ] || missing="$missing PUBLIC_URL"
@@ -153,7 +153,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner-US
           role-duration-seconds: 900
 
@@ -176,8 +176,8 @@ jobs:
       - name: Upload all files from OpenSign to S3
         run: |
           cd apps/OpenSign/build
-          aws s3 rm s3://${{ secrets.BUCKET }}/ --recursive --exclude "*" --include "*.map"
-          aws s3 cp . s3://${{ secrets.BUCKET }}/ --recursive
+          aws s3 rm s3://${{ vars.BUCKET }}/ --recursive --exclude "*" --include "*.map"
+          aws s3 cp . s3://${{ vars.BUCKET }}/ --recursive
         continue-on-error: false
 
   Invalidate-US:
@@ -194,16 +194,16 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
           role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner-US
           role-duration-seconds: 900
 
       - name: Invalidate CloudFront Distribution Cache
         env:
-          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+          DISTRIBUTION_ID: ${{ vars.CF_ID_PRODUCTION }}
         run: |
           if [ -z "$DISTRIBUTION_ID" ]; then
-            echo "::error::production-us variable CLOUDFRONT_DISTRIBUTION_ID is not set"
+            echo "::error::production-us variable CF_ID_PRODUCTION is not set"
             exit 1
           fi
 
