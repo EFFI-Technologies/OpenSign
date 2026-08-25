@@ -28,7 +28,9 @@ const presignedUrlExpiresSeconds = Number(process.env.PRESIGNED_URL_EXPIRES_SECO
 let fsAdapter;
 if (useLocal !== 'true') {
   try {
-    const s3overrides = {};
+    // S3 requires SigV4 in every region created after Jan 2014 (e.g. us-east-2);
+    // aws-sdk v2 otherwise falls back to SigV2 for presigned URLs and S3 answers 400.
+    const s3overrides = { signatureVersion: 'v4' };
     if (process.env.DO_ENDPOINT) {
       s3overrides.endpoint = new AWS.Endpoint(process.env.DO_ENDPOINT);
     }

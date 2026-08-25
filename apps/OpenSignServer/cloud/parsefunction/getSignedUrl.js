@@ -157,6 +157,9 @@ export default function getPresignedUrl(url, adapter) {
   const endpoint = adapter?.endpoint || process.env.DO_ENDPOINT;
   const region = adapter?.region || process.env.DO_REGION;
   const s3Options = {
+    // S3 requires SigV4 in every region created after Jan 2014 (e.g. us-east-2);
+    // aws-sdk v2 otherwise falls back to SigV2 for presigned URLs and S3 answers 400.
+    signatureVersion: 'v4',
     region,
   };
   const credentials = getCredentials(accessKeyId, secretAccessKey);
