@@ -109,7 +109,9 @@ export default async function getTenant(request) {
             return res;
           }
         } catch (e) {
-          return 'user does not exist!';
+          // Tenant is optional here (used only for the optional custom completion email).
+          // Fail closed with no data rather than a fatal error so signing is never blocked.
+          return {};
         }
       } else {
         return { status: 'error', result: 'Invalid token!' };
@@ -126,11 +128,14 @@ export default async function getTenant(request) {
           request.params.docId
         );
         if (!canReadTenant) {
-          return 'user does not exist!';
+          // Not authorized to read this tenant. Fail closed (no data) instead of a
+          // fatal error — this endpoint only supplies the optional completion email
+          // and must not block an otherwise-authorized signature.
+          return {};
         }
 
         const tenant = await getTenantByUserId(requestedUserId);
-        return tenant || 'user does not exist!';
+        return tenant || {};
       }
 
       const extUser = await requireCurrentExtUser(request);
@@ -142,7 +147,9 @@ export default async function getTenant(request) {
       if (e?.code === Parse.Error.INVALID_SESSION_TOKEN) {
         return { status: 'error', result: 'Invalid session token!' };
       }
-      return 'user does not exist!';
+      // Any other failure (e.g. dangling TenantId pointer): fail closed with no data
+      // rather than a fatal error so signing is never blocked.
+      return {};
     }
   }
 }
