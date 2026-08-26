@@ -2020,7 +2020,10 @@ export const getTenantDetails = async (objectId, jwttoken, docId) => {
     }
   } catch (err) {
     console.log("err in gettenant", err);
-    return "user does not exist!";
+    // Tenant details are optional (only used for the custom completion email).
+    // Return an empty object rather than a fatal marker so a transient fetch
+    // failure never blocks an otherwise-authorized signature.
+    return {};
   }
 };
 
