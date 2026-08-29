@@ -42,7 +42,9 @@ export default async function GenerateCertificate(docDetails) {
   const IsEnableOTP = docDetails?.IsEnableOTP || false;
   const auditTrail =
     docDetails?.Signers?.length > 0
-      ? docDetails.AuditTrail.map(x => {
+      ? docDetails.AuditTrail.filter(
+          x => x?.UserPtr?.objectId && docDetails.Signers.some(y => y.objectId === x.UserPtr.objectId)
+        ).map(x => {
           const data = docDetails.Signers.find(y => y.objectId === x.UserPtr.objectId);
           return {
             ...data,
@@ -55,13 +57,13 @@ export default async function GenerateCertificate(docDetails) {
       : [
           {
             ...docDetails.ExtUserPtr,
-            ipAddress: docDetails?.AuditTrail[0].ipAddress,
-            SignedOn: docDetails?.AuditTrail[0]?.SignedOn || generatedUTCTime,
+            ipAddress: docDetails?.AuditTrail?.[0]?.ipAddress || '',
+            SignedOn: docDetails?.AuditTrail?.[0]?.SignedOn || generatedUTCTime,
             ViewedOn:
-              docDetails?.AuditTrail[0]?.ViewedOn ||
-              docDetails?.AuditTrail[0]?.SignedOn ||
+              docDetails?.AuditTrail?.[0]?.ViewedOn ||
+              docDetails?.AuditTrail?.[0]?.SignedOn ||
               generatedUTCTime,
-            Signature: docDetails?.AuditTrail[0]?.Signature || '',
+            Signature: docDetails?.AuditTrail?.[0]?.Signature || '',
           },
         ];
 
@@ -285,7 +287,7 @@ export default async function GenerateCertificate(docDetails) {
       color: textKeyColor,
     });
 
-    page.drawText(x?.Name, {
+    page.drawText(x?.Name || '', {
       x: 75,
       y: yPosition2,
       size: text,
@@ -317,7 +319,7 @@ export default async function GenerateCertificate(docDetails) {
       color: textKeyColor,
     });
 
-    page.drawText(x?.Email, {
+    page.drawText(x?.Email || '', {
       x: 75,
       y: yPosition3,
       size: text,
@@ -349,7 +351,7 @@ export default async function GenerateCertificate(docDetails) {
       color: textKeyColor,
     });
 
-    page.drawText(x?.ipAddress, {
+    page.drawText(x?.ipAddress || '', {
       x: 100,
       y: yPosition4,
       size: 13,
@@ -456,7 +458,7 @@ export default async function GenerateCertificate(docDetails) {
         color: textKeyColor,
       });
 
-      currentPage.drawText(x?.Name, {
+      currentPage.drawText(x?.Name || '', {
         x: 75,
         y: yPosition2,
         size: text,
@@ -488,7 +490,7 @@ export default async function GenerateCertificate(docDetails) {
         color: textKeyColor,
       });
 
-      currentPage.drawText(x?.Email, {
+      currentPage.drawText(x?.Email || '', {
         x: 75,
         y: yPosition3,
         size: text,
@@ -520,7 +522,7 @@ export default async function GenerateCertificate(docDetails) {
         color: textKeyColor,
       });
 
-      currentPage.drawText(x?.ipAddress, {
+      currentPage.drawText(x?.ipAddress || '', {
         x: 100,
         y: yPosition4,
         size: text,
