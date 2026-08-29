@@ -2,6 +2,16 @@ name: FrontEnd-Production-Deploy-S3
 
 on:
   workflow_dispatch:   # This allows manual triggers
+    inputs:
+      region:
+        description: 'Which production region(s) to deploy'
+        type: choice
+        required: true
+        default: au
+        options:
+          - au
+          - us
+          - both
   # Uncomment below to trigger on push to tags or main branch
   # push:
   #   tags:
@@ -11,8 +21,8 @@ on:
 
 jobs:
   OPENSIGN-Deploy:
-    if: ${{ ! failure() && ! cancelled() }}
-    name: Build and Copy OPENSIGN
+    if: ${{ ! failure() && ! cancelled() && (inputs.region == 'au' || inputs.region == 'both') }}
+    name: Build and Copy OPENSIGN (AU)
     runs-on: ubuntu-latest
     environment:
       name: Production
@@ -68,7 +78,7 @@ jobs:
         continue-on-error: false
 
   Invalidate:
-    name: CloudFront invalidation
+    name: CloudFront invalidation (AU)
     runs-on: ubuntu-latest
     needs: [OPENSIGN-Deploy]  
     permissions:
@@ -86,3 +96,115 @@ jobs:
       - name: Invalidate CloudFront Distribution Cache
         run: |
           aws cloudfront create-invalidation --distribution-id E1260K2VFTPEU1 --paths "/*"
+
+  OPENSIGN-Deploy-US:
+    if: ${{ ! failure() && ! cancelled() && (inputs.region == 'us' || inputs.region == 'both') }}
+    name: Build and Copy OPENSIGN (US)
+    runs-on: ubuntu-latest
+    environment:
+      name: production-us
+      url: ${{ vars.PUBLIC_URL }}
+    permissions:
+      id-token: write
+      contents: read
+    # All US-specific values come from the `production-us` GitHub Environment.
+    #   Required secrets : AWS_PRODUCTION_ROLE, AWS_REGION, BUCKET
+    #   Required vars    : PUBLIC_URL, REACT_APP_SERVERURL,
+    #                      REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY, CLOUDFRONT_DISTRIBUTION_ID
+    #   Optional vars    : REACT_APP_APPID (defaults to effisign)
+    env:  # Environment variables for the entire job
+      PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+      GENERATE_SOURCEMAP: false
+      REACT_APP_SERVERURL: ${{ vars.REACT_APP_SERVERURL }}
+      REACT_APP_APPID: ${{ vars.REACT_APP_APPID || 'effisign' }}
+      CI: false
+      REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY: ${{ vars.REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate US environment configuration
+        env:
+          BUCKET: ${{ vars.BUCKET }}
+          AWS_ROLE: ${{ vars.AWS_PRODUCTION_ROLE }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          missing=""
+          [ -n "$PUBLIC_URL" ] || missing="$missing PUBLIC_URL"
+          [ -n "$REACT_APP_SERVERURL" ] || missing="$missing REACT_APP_SERVERURL"
+          [ -n "$REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY" ] || missing="$missing REACT_APP_CAPTCHA_TURNSTILE_SITE_KEY"
+          [ -n "$BUCKET" ] || missing="$missing BUCKET"
+          [ -n "$AWS_ROLE" ] || missing="$missing AWS_PRODUCTION_ROLE"
+          [ -n "$AWS_REGION" ] || missing="$missing AWS_REGION"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing production-us environment config:$missing"
+            exit 1
+          fi
+
+          echo "Building $PUBLIC_URL against $REACT_APP_SERVERURL"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.12.2' # Latest LTS
+
+      - name: Configure AWS credentials from OIDC Provider
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner-US
+          role-duration-seconds: 900
+
+      - name: Install Dependencies
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm install
+
+      - name: Build the frontend
+        run: |
+          cd apps/OpenSign  # Change directory to your frontend app folder
+          npm run build  # This will build the frontend
+          find build -type f -name "*.map" -delete
+
+      - name: List Directory Contents
+        run: |
+          cd apps/OpenSign
+          ls -al
+
+      - name: Upload all files from OpenSign to S3
+        run: |
+          cd apps/OpenSign/build
+          aws s3 rm s3://${{ vars.BUCKET }}/ --recursive --exclude "*" --include "*.map"
+          aws s3 cp . s3://${{ vars.BUCKET }}/ --recursive
+        continue-on-error: false
+
+  Invalidate-US:
+    name: CloudFront invalidation (US)
+    runs-on: ubuntu-latest
+    needs: [OPENSIGN-Deploy-US]
+    environment:
+      name: production-us
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials from OIDC Provider
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: EFFI-GitHub-CI-CD-GitHub-Runner-US
+          role-duration-seconds: 900
+
+      - name: Invalidate CloudFront Distribution Cache
+        env:
+          DISTRIBUTION_ID: ${{ vars.CF_ID_PRODUCTION }}
+        run: |
+          if [ -z "$DISTRIBUTION_ID" ]; then
+            echo "::error::production-us variable CF_ID_PRODUCTION is not set"
+            exit 1
+          fi
+
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
